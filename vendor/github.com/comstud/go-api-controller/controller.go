@@ -1,5 +1,7 @@
 package controller
 
+import "context"
+
 type Controller struct {
 	*Router
 	Logger
@@ -9,6 +11,10 @@ type Controller struct {
 func (self *Controller) SetLogger(logger Logger) *Controller {
 	self.Logger = logger
 	return self
+}
+
+func (self *Controller) RequestContext(ctx context.Context) *RequestContext {
+	return RequestContextFromContext(ctx)
 }
 
 func NewController(config *Config) (*Controller, error) {

@@ -10,19 +10,19 @@
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller",
-			"Rev": "718b2df81b85f276a0eba38399eb83815d1567b9"
+			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller/middleware/jsonschema",
-			"Rev": "718b2df81b85f276a0eba38399eb83815d1567b9"
+			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller/middleware/panichandler",
-			"Rev": "718b2df81b85f276a0eba38399eb83815d1567b9"
+			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller/middleware/serializers",
-			"Rev": "718b2df81b85f276a0eba38399eb83815d1567b9"
+			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",

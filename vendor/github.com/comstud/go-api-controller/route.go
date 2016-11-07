@@ -62,7 +62,7 @@ func (self *Route) register(fn ControllerFn) *Route {
 }
 
 func (self *Route) handleRequest(w http.ResponseWriter, r *http.Request) {
-	ctx := newContextForRequest(
+	ctx := NewContextForRequest(
 		newResponseWriter(w, self.defaultStatus),
 		r,
 		self,

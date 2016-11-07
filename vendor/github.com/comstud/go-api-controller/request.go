@@ -84,7 +84,7 @@ func (self *RequestContext) WriteResponseString(data string) (err error) {
 	return
 }
 
-func newContextForRequest(w ResponseWriter, r *http.Request, cur_route *Route) context.Context {
+func NewContextForRequest(w ResponseWriter, r *http.Request, cur_route *Route) context.Context {
 	vars := cur_route.RouteVars(r)
 	if vars == nil {
 		vars = make(map[string]string)

@@ -1,0 +1,49 @@
+{
+	"ImportPath": "github.com/tilteng/go-api-framework",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "bitbucket.org/ww/goautoneg",
+			"Comment": "null-5",
+			"Rev": "'75cd24fc2f2c2a2088577d12123ddee5f54e0675'"
+		},
+		{
+			"ImportPath": "github.com/comstud/go-api-controller",
+			"Rev": "3b59758af21c8f3e44d595d8fb991c60ac87b448"
+		},
+		{
+			"ImportPath": "github.com/comstud/go-api-controller/middleware/jsonschema",
+			"Rev": "3b59758af21c8f3e44d595d8fb991c60ac87b448"
+		},
+		{
+			"ImportPath": "github.com/comstud/go-api-controller/middleware/panichandler",
+			"Rev": "3b59758af21c8f3e44d595d8fb991c60ac87b448"
+		},
+		{
+			"ImportPath": "github.com/comstud/go-api-controller/middleware/serializers",
+			"Rev": "3b59758af21c8f3e44d595d8fb991c60ac87b448"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-27-g757bef9",
+			"Rev": "757bef944d0f21880861c2dd9c871ca543023cba"
+		},
+		{
+			"ImportPath": "github.com/pborman/uuid",
+			"Rev": "3d4f2ba23642d3cfd06bd4b54cf03d99d95c0f1b"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonpointer",
+			"Rev": "e0fe6f68307607d540ed8eac07a342c33fa1b54a"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonreference",
+			"Rev": "e02fc20de94c78484cd5ffb007f8af96be030a45"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonschema",
+			"Rev": "3a089261b6b42d98d910b1444e36ac9347ad87f9"
+		}
+	]
+}

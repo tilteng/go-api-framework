@@ -1,0 +1,26 @@
+machine:
+  post:
+    - sudo rm -rf /usr/local/go
+    - if [ ! -e go1.7.1.linux-amd64.tar.gz ] ; then curl -o go1.7.1.linux-amd64.tar.gz https://storage.googleapis.com/golang/go1.7.1.linux-amd64.tar.gz; fi
+    - sudo tar -C /usr/local -xzf go1.7.1.linux-amd64.tar.gz
+  environment:
+    IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    SINGLE_GOPATH: "`echo $GOPATH | awk -F: '{ print $1 }'`"
+    SRC_GOPATH: "$SINGLE_GOPATH/src/$IMPORT_PATH/"
+
+dependencies:
+  cache_directories:
+    - ~/go1.7.1.linux-amd64.tar.gz
+  pre:
+    - go get -u github.com/tools/godep
+
+  override:
+    - mkdir -p "$SRC_GOPATH"
+    - rsync -azC --delete ./ "$SRC_GOPATH"
+
+test:
+  pre:
+    - go vet ./...
+
+  override:
+    - cd "$SRC_GOPATH" && godep go test -v ./...

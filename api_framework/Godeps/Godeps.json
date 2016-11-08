@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/tilteng/go-api-framework/api_framework",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "bitbucket.org/ww/goautoneg",
@@ -19,7 +22,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-jsonschema/jsonschema_mw",
-			"Rev": "cde2730e902296f66859ac8ce5aa2679340abff1"
+			"Rev": "67ec159436edf7de8805ad73096adb31152436e9"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-panichandler/panichandler_mw",
@@ -35,7 +38,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/logger",
-			"Rev": "189a5bb128061cf100cbf8d1b58e0899c93c2643"
+			"Rev": "8499e166bdc54371ee05b53c6f53d9cc316dde47"
 		},
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonpointer",

@@ -104,12 +104,12 @@ func (self *JSONSchemaMiddleware) NewWrapper(schema *gojsonschema.Schema, linkpa
 	}
 }
 
-func (self *JSONSchemaMiddleware) NewWrapperFromSchemaName(name string, linkpath string) *JSONSchemaWrapper {
+func (self *JSONSchemaMiddleware) NewWrapperFromSchemaName(name string) *JSONSchemaWrapper {
 	schema := self.GetSchema(name)
 	if schema == nil {
 		panic(fmt.Errorf("Couldn't find json schema with name '%s'", name))
 	}
-	return self.NewWrapper(schema.GetSchema(), linkpath)
+	return self.NewWrapper(schema.GetSchema(), name)
 }
 
 func (self *JSONSchemaMiddleware) NewWrapperFromRouteOptions(opts ...interface{}) *JSONSchemaWrapper {
@@ -125,7 +125,6 @@ func (self *JSONSchemaMiddleware) NewWrapperFromRouteOptions(opts ...interface{}
 		}
 		return self.NewWrapperFromSchemaName(
 			schema_name,
-			schema_name+".json",
 		)
 	}
 	return nil

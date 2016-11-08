@@ -29,9 +29,10 @@ func (self *JSONSchemaWrapper) validateBody(ctx context.Context, rctx *controlle
 		var str string
 		for _, desc := range result.Errors() {
 			if str != "" {
-				str += ","
+				str += "," + desc.String()
+			} else {
+				str += desc.String()
 			}
-			str += fmt.Sprintf("%s", desc)
 		}
 		rctx.SetStatus(400)
 		rctx.WriteResponse(nil) // Force writing of status

@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/tilteng/go-api-framework",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "bitbucket.org/ww/goautoneg",
@@ -10,19 +13,19 @@
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller",
-			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
+			"Rev": "926d79a224e4d5a1b70639cfaa28446278443007"
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller/middleware/jsonschema",
-			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
+			"Rev": "926d79a224e4d5a1b70639cfaa28446278443007"
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller/middleware/panichandler",
-			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
+			"Rev": "926d79a224e4d5a1b70639cfaa28446278443007"
 		},
 		{
 			"ImportPath": "github.com/comstud/go-api-controller/middleware/serializers",
-			"Rev": "15a93cc095093f4863671cc659bd14316a1166e5"
+			"Rev": "926d79a224e4d5a1b70639cfaa28446278443007"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",

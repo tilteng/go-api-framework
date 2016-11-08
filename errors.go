@@ -3,23 +3,72 @@ package controller
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/comstud/go-api-controller"
 	"github.com/comstud/go-api-controller/middleware/jsonschema"
 	"github.com/comstud/go-api-controller/middleware/serializers"
 )
 
+type ErrorType interface {
+	GetID() string
+	GetStatusCode() int
+	SetStatusCode(int)
+	GetMethod() string
+	SetMethod(string)
+	GetPath() string
+	SetPath(string)
+	GetInternalError() string
+	GetInternalDetails() interface{}
+}
+
 type ErrorResponse struct {
 	Error interface{} `json:"error"`
 }
 
 type BaseError struct {
-	Id              string      `json:"id"`
+	ID              string      `json:"id"`
 	StatusCode      int         `json:"status"`
 	Method          string      `json:"method"`
 	Path            string      `json:"path"`
 	InternalError   string      `json:"-"`
 	InternalDetails interface{} `json:"-"`
+}
+
+func (self *BaseError) GetID() string {
+	return self.ID
+}
+
+func (self *BaseError) GetStatusCode() int {
+	return self.StatusCode
+}
+
+func (self *BaseError) SetStatusCode(code int) {
+	self.StatusCode = code
+}
+
+func (self *BaseError) GetMethod() string {
+	return self.Method
+}
+
+func (self *BaseError) SetMethod(method string) {
+	self.Method = method
+}
+
+func (self *BaseError) GetPath() string {
+	return self.Path
+}
+
+func (self *BaseError) SetPath(path string) {
+	self.Path = path
+}
+
+func (self *BaseError) GetInternalError() string {
+	return self.InternalError
+}
+
+func (self *BaseError) GetInternalDetails() interface{} {
+	return self.InternalDetails
 }
 
 type Error struct {
@@ -32,7 +81,7 @@ type Error struct {
 func NewError(status int, code string, err_str string) *Error {
 	return &Error{
 		BaseError: BaseError{
-			Id:         "ERR" + GenUUIDHex(),
+			ID:         "ERR" + GenUUIDHex(),
 			StatusCode: status,
 		},
 		Code:  code,
@@ -43,9 +92,10 @@ func NewError(status int, code string, err_str string) *Error {
 func DefaultPanicHandler(ctx context.Context, v interface{}) {
 	err_cont_obj, ok := v.(*ErrorResponse)
 	if !ok {
-		if _, ok := v.(BaseError); ok {
+		if _, ok := v.(ErrorType); ok {
 			err_cont_obj = &ErrorResponse{v}
 		} else {
+			log.Printf("Something busted: %+v", v)
 			err_obj := NewError(
 				500,
 				"ERR_ID_INTERNAL_SERVER_ERROR",
@@ -64,8 +114,8 @@ func DefaultPanicHandler(ctx context.Context, v interface{}) {
 		}
 	}
 
-	if base_err, ok := err_cont_obj.Error.(BaseError); ok {
-		HandleBaseError(ctx, &base_err)
+	if err_type, ok := err_cont_obj.Error.(ErrorType); ok {
+		HandleErrorType(ctx, err_type)
 	}
 
 	// TODO: Do something with error?
@@ -77,22 +127,22 @@ func DefaultPanicHandler(ctx context.Context, v interface{}) {
 	rctx.WriteResponseString("An unknown error occurred")
 }
 
-func HandleBaseError(ctx context.Context, base_err *BaseError) {
+func HandleErrorType(ctx context.Context, err ErrorType) {
 	rctx := controller.RequestContextFromContext(ctx)
 
-	if base_err.StatusCode <= 0 {
-		base_err.StatusCode = 500
+	if err.GetStatusCode() <= 0 {
+		err.SetStatusCode(500)
 	}
 
-	if base_err.Method == "" {
-		base_err.Method = rctx.CurrentRoute().Method()
+	if err.GetMethod() == "" {
+		err.SetMethod(rctx.CurrentRoute().Method())
 	}
 
-	if base_err.Path == "" {
-		base_err.Path = rctx.CurrentRoute().Path()
+	if err.GetPath() == "" {
+		err.SetPath(rctx.CurrentRoute().Path())
 	}
 
-	rctx.SetStatus(base_err.StatusCode)
+	rctx.SetStatus(err.GetStatusCode())
 }
 
 func DefaultSerializerErrorHandler(ctx context.Context, err error) {

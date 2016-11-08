@@ -13,6 +13,7 @@ import (
 
 type TiltControllerOpts struct {
 	BaseAPIURL             string
+	BaseRouter             *controller.Router
 	ConsumesContent        []string
 	ProducesContent        []string
 	JSONSchemaRoutePath    string
@@ -48,16 +49,17 @@ func (self *TiltController) ReadBody(ctx context.Context, v interface{}) error {
 }
 
 func (self *TiltController) WriteResponse(ctx context.Context, v interface{}) error {
-	if base_err, ok := v.(BaseError); ok {
-		HandleBaseError(ctx, &base_err)
+	if err, ok := v.(ErrorType); ok {
+		HandleErrorType(ctx, err)
+		return serializers.WriteSerializedResponse(ctx, &ErrorResponse{v})
 	}
 	return serializers.WriteSerializedResponse(ctx, v)
 
 }
 
 func (self *TiltController) WriteError(ctx context.Context, err *Error) error {
-	HandleBaseError(ctx, &err.BaseError)
-	return serializers.WriteSerializedResponse(ctx, err)
+	HandleErrorType(ctx, &err.BaseError)
+	return serializers.WriteSerializedResponse(ctx, &ErrorResponse{err})
 }
 
 func (self *TiltController) NewError(status int, code string, err_str string) *Error {
@@ -99,7 +101,7 @@ func (self *TiltController) setupSchemaRoutes() error {
 	return nil
 }
 
-func (self *TiltController) Init(base_router *controller.Router) error {
+func (self *TiltController) Init() error {
 	if self.PanicHandlerMiddleware == nil && self.options.PanicHandler != nil {
 		self.PanicHandlerMiddleware = panichandler.NewMiddleware(
 			self.options.PanicHandler,
@@ -153,12 +155,16 @@ func (self *TiltController) Init(base_router *controller.Router) error {
 		rt.SetControllerFn(fn)
 
 		if logger := self.options.Logger; logger != nil {
-			logger.Debugf("Registered route: %s", rt.FullPath())
+			logger.Debugf("Registered route: %s %s", rt.Method(), rt.FullPath())
 		}
 	}
 
+	if self.options.BaseRouter == nil {
+		self.options.BaseRouter = controller.NewMuxRouter()
+	}
+
 	controller_config := &controller.Config{
-		BaseRouter:         base_router,
+		BaseRouter:         self.options.BaseRouter,
 		Logger:             self.options.Logger,
 		NewRouteNotifierFn: new_route_notifier,
 	}

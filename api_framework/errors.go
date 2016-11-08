@@ -1,13 +1,13 @@
-package framework
+package api_framework
 
 import (
 	"context"
 	"fmt"
 	"log"
 
-	"github.com/comstud/go-api-controller"
-	"github.com/comstud/go-api-controller/middleware/jsonschema"
-	"github.com/comstud/go-api-controller/middleware/serializers"
+	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
+	"github.com/tilteng/go-api-router/api_router"
+	"github.com/tilteng/go-api-serializers/serializers_mw"
 )
 
 type ErrorType interface {
@@ -119,16 +119,16 @@ func DefaultPanicHandler(ctx context.Context, v interface{}) {
 	}
 
 	// TODO: Do something with error?
-	if serializers.WriteSerializedResponse(ctx, err_cont_obj) == nil {
+	if serializers_mw.WriteSerializedResponse(ctx, err_cont_obj) == nil {
 		return
 	}
 
-	rctx := controller.RequestContextFromContext(ctx)
+	rctx := api_router.RequestContextFromContext(ctx)
 	rctx.WriteResponseString("An unknown error occurred")
 }
 
 func HandleErrorType(ctx context.Context, err ErrorType) {
-	rctx := controller.RequestContextFromContext(ctx)
+	rctx := api_router.RequestContextFromContext(ctx)
 
 	if err.GetStatusCode() <= 0 {
 		err.SetStatusCode(500)
@@ -146,13 +146,13 @@ func HandleErrorType(ctx context.Context, err ErrorType) {
 }
 
 func DefaultSerializerErrorHandler(ctx context.Context, err error) {
-	rctx := controller.RequestContextFromContext(ctx)
+	rctx := api_router.RequestContextFromContext(ctx)
 	rctx.SetStatus(500)
 	rctx.WriteResponseString(err.Error())
 }
 
-func DefaultJSONSchemaErrorHandler(ctx context.Context, result *jsonschema.JSONSchemaResult) bool {
-	rctx := controller.RequestContextFromContext(ctx)
+func DefaultJSONSchemaErrorHandler(ctx context.Context, result *jsonschema_mw.JSONSchemaResult) bool {
+	rctx := api_router.RequestContextFromContext(ctx)
 	rctx.SetStatus(400)
 	details := []string{}
 	for _, err := range result.Errors() {

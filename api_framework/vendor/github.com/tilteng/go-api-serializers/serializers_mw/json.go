@@ -1,4 +1,4 @@
-package serializers
+package serializers_mw
 
 import (
 	"encoding/json"

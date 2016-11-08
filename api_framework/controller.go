@@ -1,27 +1,28 @@
-package framework
+package api_framework
 
 import (
 	"context"
 	"fmt"
 	"os"
 
-	"github.com/comstud/go-api-controller"
-	"github.com/comstud/go-api-controller/middleware/jsonschema"
-	"github.com/comstud/go-api-controller/middleware/panichandler"
-	"github.com/comstud/go-api-controller/middleware/serializers"
+	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
+	"github.com/tilteng/go-api-panichandler/panichandler_mw"
+	"github.com/tilteng/go-api-router/api_router"
+	"github.com/tilteng/go-api-serializers/serializers_mw"
+	"github.com/tilteng/go-logger/logger"
 )
 
 type TiltControllerOpts struct {
 	BaseAPIURL             string
-	BaseRouter             *controller.Router
+	BaseRouter             *api_router.Router
 	ConsumesContent        []string
 	ProducesContent        []string
 	JSONSchemaRoutePath    string
 	JSONSchemaFilePath     string
-	JSONSchemaErrorHandler jsonschema.ErrorHandler
-	PanicHandler           panichandler.PanicHandler
-	SerializerErrorHandler serializers.ErrorHandler
-	Logger                 controller.Logger
+	JSONSchemaErrorHandler jsonschema_mw.ErrorHandler
+	PanicHandler           panichandler_mw.PanicHandler
+	SerializerErrorHandler serializers_mw.ErrorHandler
+	Logger                 logger.Logger
 }
 
 func NewTiltControllerOpts() *TiltControllerOpts {
@@ -32,34 +33,35 @@ func NewTiltControllerOpts() *TiltControllerOpts {
 		PanicHandler:           DefaultPanicHandler,
 		SerializerErrorHandler: DefaultSerializerErrorHandler,
 		JSONSchemaErrorHandler: DefaultJSONSchemaErrorHandler,
-		Logger:                 controller.NewDefaultLogger(os.Stdout, ""),
+		Logger:                 logger.NewDefaultLogger(os.Stdout, ""),
 	}
 }
 
 type TiltController struct {
-	*controller.Controller
+	*api_router.Router
+	logger.Logger
 	options                *TiltControllerOpts
-	JSONSchemaMiddleware   *jsonschema.JSONSchemaMiddleware
-	PanicHandlerMiddleware *panichandler.PanicHandlerMiddleware
-	SerializerMiddleware   *serializers.SerializerMiddleware
+	JSONSchemaMiddleware   *jsonschema_mw.JSONSchemaMiddleware
+	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware
+	SerializerMiddleware   *serializers_mw.SerializerMiddleware
 }
 
 func (self *TiltController) ReadBody(ctx context.Context, v interface{}) error {
-	return serializers.DeserializedBody(ctx, v)
+	return serializers_mw.DeserializedBody(ctx, v)
 }
 
 func (self *TiltController) WriteResponse(ctx context.Context, v interface{}) error {
 	if err, ok := v.(ErrorType); ok {
 		HandleErrorType(ctx, err)
-		return serializers.WriteSerializedResponse(ctx, &ErrorResponse{v})
+		return serializers_mw.WriteSerializedResponse(ctx, &ErrorResponse{v})
 	}
-	return serializers.WriteSerializedResponse(ctx, v)
+	return serializers_mw.WriteSerializedResponse(ctx, v)
 
 }
 
 func (self *TiltController) WriteError(ctx context.Context, err *Error) error {
 	HandleErrorType(ctx, &err.BaseError)
-	return serializers.WriteSerializedResponse(ctx, &ErrorResponse{err})
+	return serializers_mw.WriteSerializedResponse(ctx, &ErrorResponse{err})
 }
 
 func (self *TiltController) NewError(status int, code string, err_str string) *Error {
@@ -70,7 +72,7 @@ func (self *TiltController) setupSchemaRoutes() error {
 	schemas := self.JSONSchemaMiddleware.GetSchemas()
 
 	self.GET(self.options.JSONSchemaRoutePath, func(ctx context.Context) {
-		rctx := controller.RequestContextFromContext(ctx)
+		rctx := self.RequestContext(ctx)
 
 		rctx.SetStatus(200)
 		rctx.SetResponseHeader("Content-Type", "application/json")
@@ -91,7 +93,7 @@ func (self *TiltController) setupSchemaRoutes() error {
 
 	for k, v := range schemas {
 		sr.GET("/"+k, func(ctx context.Context) {
-			rctx := controller.RequestContextFromContext(ctx)
+			rctx := self.RequestContext(ctx)
 			rctx.SetStatus(200)
 			rctx.SetResponseHeader("Content-Type", "application/json+schema")
 			rctx.WriteResponseString(v.GetJSONString())
@@ -103,7 +105,7 @@ func (self *TiltController) setupSchemaRoutes() error {
 
 func (self *TiltController) Init() error {
 	if self.PanicHandlerMiddleware == nil && self.options.PanicHandler != nil {
-		self.PanicHandlerMiddleware = panichandler.NewMiddleware(
+		self.PanicHandlerMiddleware = panichandler_mw.NewMiddleware(
 			self.options.PanicHandler,
 		)
 	}
@@ -114,7 +116,7 @@ func (self *TiltController) Init() error {
 			route_prefix = self.options.BaseAPIURL + rp
 		}
 
-		js_mw := jsonschema.NewMiddlewareWithLinkPathPrefix(
+		js_mw := jsonschema_mw.NewMiddlewareWithLinkPathPrefix(
 			self.options.JSONSchemaErrorHandler,
 			route_prefix,
 		).SetLogger(self.options.Logger)
@@ -128,15 +130,15 @@ func (self *TiltController) Init() error {
 	}
 
 	if self.SerializerMiddleware == nil {
-		self.SerializerMiddleware = serializers.NewMiddleware(
+		self.SerializerMiddleware = serializers_mw.NewMiddleware(
 			self.options.ConsumesContent,
 			self.options.ProducesContent,
 			self.options.SerializerErrorHandler,
 		)
 	}
 
-	new_route_notifier := func(rt *controller.Route, opts ...interface{}) {
-		fn := rt.ControllerFn()
+	new_route_notifier := func(rt *api_router.Route, opts ...interface{}) {
+		fn := rt.RouteFn()
 
 		if js_mw := self.JSONSchemaMiddleware; js_mw != nil {
 			if wrapper := js_mw.NewWrapperFromRouteOptions(opts...); wrapper != nil {
@@ -152,7 +154,7 @@ func (self *TiltController) Init() error {
 			fn = ser_mw.NewWrapper().Wrap(fn)
 		}
 
-		rt.SetControllerFn(fn)
+		rt.SetRouteFn(fn)
 
 		if logger := self.options.Logger; logger != nil {
 			logger.Debugf("Registered route: %s %s", rt.Method(), rt.FullPath())
@@ -160,25 +162,15 @@ func (self *TiltController) Init() error {
 	}
 
 	if self.options.BaseRouter == nil {
-		self.options.BaseRouter = controller.NewMuxRouter()
+		self.options.BaseRouter = api_router.NewMuxRouter()
 	}
 
-	controller_config := &controller.Config{
-		BaseRouter:         self.options.BaseRouter,
-		Logger:             self.options.Logger,
-		NewRouteNotifierFn: new_route_notifier,
-	}
-
-	base_controller, err := controller.NewController(controller_config)
-	if err != nil {
-		return err
-	}
-
-	self.Controller = base_controller
+	self.Router = self.options.BaseRouter
+	self.Logger = self.options.Logger
+	self.Router.SetNewRouteNotifier(new_route_notifier)
 
 	if self.JSONSchemaMiddleware != nil && self.options.JSONSchemaRoutePath != "" {
-		err = self.setupSchemaRoutes()
-		if err != nil {
+		if err := self.setupSchemaRoutes(); err != nil {
 			return err
 		}
 	}

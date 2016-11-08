@@ -1,4 +1,4 @@
-package controller
+package api_router
 
 import "net/http"
 
@@ -9,11 +9,11 @@ type Route struct {
 	path          string
 	fullPath      string
 	defaultStatus int
-	controllerFn  ControllerFn
+	routeFn       RouteFn
 }
 
-func (self *Route) ControllerFn() ControllerFn {
-	return self.controllerFn
+func (self *Route) RouteFn() RouteFn {
+	return self.routeFn
 }
 
 func (self *Route) FullPath() string {
@@ -32,8 +32,8 @@ func (self *Route) RouteVars(r *http.Request) map[string]string {
 	return self.fwRoute.RouteVars(r)
 }
 
-func (self *Route) SetControllerFn(fn ControllerFn) *Route {
-	self.controllerFn = fn
+func (self *Route) SetRouteFn(fn RouteFn) *Route {
+	self.routeFn = fn
 	return self
 }
 
@@ -42,7 +42,7 @@ func (self *Route) SetDefaultStatus(status int) *Route {
 	return self
 }
 
-func (self *Route) register(fn ControllerFn) *Route {
+func (self *Route) register(fn RouteFn) *Route {
 	if self.defaultStatus == 0 {
 		if self.method == "POST" {
 			self.defaultStatus = 201
@@ -51,7 +51,7 @@ func (self *Route) register(fn ControllerFn) *Route {
 		}
 	}
 
-	self.controllerFn = fn
+	self.routeFn = fn
 
 	self.fwRoute = self.router.fwRouter.NewRoute(
 		self.method,
@@ -67,5 +67,5 @@ func (self *Route) handleRequest(w http.ResponseWriter, r *http.Request) {
 		r,
 		self,
 	)
-	self.controllerFn(ctx)
+	self.routeFn(ctx)
 }

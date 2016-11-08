@@ -1,9 +1,9 @@
-package panichandler
+package panichandler_mw
 
 import (
 	"context"
 
-	"github.com/comstud/go-api-controller"
+	"github.com/tilteng/go-api-router/api_router"
 )
 
 type PanicHandler func(context.Context, interface{})
@@ -31,7 +31,7 @@ func (self *PanicHandlerWrapper) SetPanicHandler(panic_handler PanicHandler) *Pa
 	return self
 }
 
-func (self *PanicHandlerWrapper) Wrap(next controller.ControllerFn) controller.ControllerFn {
+func (self *PanicHandlerWrapper) Wrap(next api_router.RouteFn) api_router.RouteFn {
 	return func(ctx context.Context) {
 		if ph := self.panicHandler; ph != nil {
 			defer func() {

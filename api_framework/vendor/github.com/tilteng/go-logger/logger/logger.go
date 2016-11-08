@@ -1,4 +1,4 @@
-package controller
+package logger
 
 import (
 	"io"

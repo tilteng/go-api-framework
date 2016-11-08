@@ -1,4 +1,4 @@
-package jsonschema
+package jsonschema_mw
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/comstud/go-api-controller"
+	"github.com/tilteng/go-logger/logger"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -36,7 +36,7 @@ func (self *JSONSchema) GetJSONString() string {
 
 type JSONSchemaMiddleware struct {
 	jsonSchemas    map[string]*JSONSchema
-	logger         controller.Logger
+	logger         logger.Logger
 	errorHandler   ErrorHandler
 	linkPathPrefix string
 }
@@ -131,7 +131,7 @@ func (self *JSONSchemaMiddleware) NewWrapperFromRouteOptions(opts ...interface{}
 	return nil
 }
 
-func (self *JSONSchemaMiddleware) SetLogger(logger controller.Logger) *JSONSchemaMiddleware {
+func (self *JSONSchemaMiddleware) SetLogger(logger logger.Logger) *JSONSchemaMiddleware {
 	self.logger = logger
 	return self
 }

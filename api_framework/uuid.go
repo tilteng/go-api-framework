@@ -1,4 +1,4 @@
-package framework
+package api_framework
 
 import (
 	"strings"

@@ -1,4 +1,4 @@
-package jsonschema
+package jsonschema_mw
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/comstud/go-api-controller"
+	"github.com/tilteng/go-api-router/api_router"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -16,7 +16,7 @@ type JSONSchemaWrapper struct {
 	schema       *gojsonschema.Schema
 }
 
-func (self *JSONSchemaWrapper) validateBody(ctx context.Context, rctx *controller.RequestContext, body []byte) bool {
+func (self *JSONSchemaWrapper) validateBody(ctx context.Context, rctx *api_router.RequestContext, body []byte) bool {
 	loader := gojsonschema.NewStringLoader(string(body))
 	result, err := self.schema.Validate(loader)
 	if err != nil {
@@ -46,9 +46,9 @@ func (self *JSONSchemaWrapper) SetErrorHandler(error_handler ErrorHandler) *JSON
 	return self
 }
 
-func (self *JSONSchemaWrapper) Wrap(next controller.ControllerFn) controller.ControllerFn {
+func (self *JSONSchemaWrapper) Wrap(next api_router.RouteFn) api_router.RouteFn {
 	return func(ctx context.Context) {
-		rctx := controller.RequestContextFromContext(ctx)
+		rctx := api_router.RequestContextFromContext(ctx)
 		if self.linkPath != "" {
 			rctx.SetResponseHeader(
 				"Link",

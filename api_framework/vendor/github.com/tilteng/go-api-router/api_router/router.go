@@ -1,11 +1,11 @@
-package controller
+package api_router
 
 import (
 	"context"
 	"net/http"
 )
 
-type ControllerFn func(context.Context)
+type RouteFn func(context.Context)
 type NewRouteNotifier func(*Route, ...interface{})
 
 type Router struct {
@@ -21,13 +21,13 @@ func (self *Router) SetNewRouteNotifier(route_notifier NewRouteNotifier) *Router
 	return self
 }
 
-func (self *Router) NewRoute(method string, path string, fn ControllerFn, opts ...interface{}) *Route {
+func (self *Router) NewRoute(method string, path string, fn RouteFn, opts ...interface{}) *Route {
 	rt := &Route{
-		router:       self,
-		method:       method,
-		path:         path,
-		fullPath:     combinePaths(self.basePath, path),
-		controllerFn: fn,
+		router:   self,
+		method:   method,
+		path:     path,
+		fullPath: combinePaths(self.basePath, path),
+		routeFn:  fn,
 	}
 	rt.register(fn)
 	self.topRouter.routes = append(self.topRouter.routes, rt)
@@ -51,28 +51,32 @@ func (self *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	self.fwRouter.ServeHTTP(w, r)
 }
 
-func (self *Router) DELETE(path string, fn ControllerFn, opts ...interface{}) *Route {
+func (self *Router) DELETE(path string, fn RouteFn, opts ...interface{}) *Route {
 	return self.NewRoute("DELETE", path, fn, opts...)
 }
 
-func (self *Router) GET(path string, fn ControllerFn, opts ...interface{}) *Route {
+func (self *Router) GET(path string, fn RouteFn, opts ...interface{}) *Route {
 	return self.NewRoute("GET", path, fn, opts...)
 }
 
-func (self *Router) HEAD(path string, fn ControllerFn, opts ...interface{}) *Route {
+func (self *Router) HEAD(path string, fn RouteFn, opts ...interface{}) *Route {
 	return self.NewRoute("HEAD", path, fn, opts...)
 }
 
-func (self *Router) PATCH(path string, fn ControllerFn, opts ...interface{}) *Route {
+func (self *Router) PATCH(path string, fn RouteFn, opts ...interface{}) *Route {
 	return self.NewRoute("PATCH", path, fn, opts...)
 }
 
-func (self *Router) POST(path string, fn ControllerFn, opts ...interface{}) *Route {
+func (self *Router) POST(path string, fn RouteFn, opts ...interface{}) *Route {
 	return self.NewRoute("POST", path, fn, opts...)
 }
 
-func (self *Router) PUT(path string, fn ControllerFn, opts ...interface{}) *Route {
+func (self *Router) PUT(path string, fn RouteFn, opts ...interface{}) *Route {
 	return self.NewRoute("PUT", path, fn, opts...)
+}
+
+func (self *Router) RequestContext(ctx context.Context) *RequestContext {
+	return RequestContextFromContext(ctx)
 }
 
 func NewRouter(framework Framework) *Router {

@@ -1,4 +1,4 @@
-package serializers
+package serializers_mw
 
 import (
 	"context"
@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"bitbucket.org/ww/goautoneg"
+	"github.com/tilteng/go-api-router/api_router"
 
-	"github.com/comstud/go-api-controller"
+	"bitbucket.org/ww/goautoneg"
 )
 
 type contextKey struct {
@@ -16,7 +16,7 @@ type contextKey struct {
 }
 
 func (self *contextKey) String() string {
-	return "go-api-controller/serializers context value " + self.name
+	return "serializers_mw context value " + self.name
 }
 
 type ErrorHandler func(context.Context, error)
@@ -47,7 +47,7 @@ type SerializerWrapper struct {
 
 var requestContextCtxKey = &contextKey{"requestContext"}
 
-func (self *SerializerWrapper) newRequestContext(ctx context.Context, rctx *controller.RequestContext) (*requestContext, error) {
+func (self *SerializerWrapper) newRequestContext(ctx context.Context, rctx *api_router.RequestContext) (*requestContext, error) {
 	ctype := strings.Split(rctx.Header("Content-Type"), ";")[0]
 	ctype = strings.Trim(ctype, " ")
 
@@ -96,9 +96,9 @@ func (self *SerializerWrapper) SetErrorHandler(error_handler ErrorHandler) *Seri
 	return self
 }
 
-func (self *SerializerWrapper) Wrap(next controller.ControllerFn) controller.ControllerFn {
+func (self *SerializerWrapper) Wrap(next api_router.RouteFn) api_router.RouteFn {
 	return func(ctx context.Context) {
-		rctx := controller.RequestContextFromContext(ctx)
+		rctx := api_router.RequestContextFromContext(ctx)
 		mw_rctx, err := self.newRequestContext(ctx, rctx)
 		if err != nil {
 			if self.errorHandler == nil {

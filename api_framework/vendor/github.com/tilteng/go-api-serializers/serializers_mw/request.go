@@ -1,9 +1,9 @@
-package serializers
+package serializers_mw
 
 import (
 	"io"
 
-	controller "github.com/comstud/go-api-controller"
+	"github.com/tilteng/go-api-router/api_router"
 )
 
 type Serializer interface {
@@ -19,7 +19,7 @@ var serializers = map[string]Serializer{
 }
 
 type requestContext struct {
-	rctx         *controller.RequestContext
+	rctx         *api_router.RequestContext
 	deserializer Serializer
 	serializer   Serializer
 }

@@ -91,8 +91,11 @@ func (self *TiltController) setupSchemaRoutes() error {
 
 	sr := self.SubRouterForPath(self.options.JSONSchemaRoutePath)
 
-	for k, v := range schemas {
+	for k := range schemas {
 		sr.GET("/"+k, func(ctx context.Context) {
+			// We need the closure to have its own value, so we don't
+			// grab the key from the 'range' above.
+			v := schemas[k]
 			rctx := self.RequestContext(ctx)
 			rctx.SetStatus(200)
 			rctx.SetResponseHeader("Content-Type", "application/json+schema")

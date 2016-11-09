@@ -37,8 +37,12 @@
 			"Rev": "342c7c6a4c557368931f9bf2771fc9c8afd619ef"
 		},
 		{
+			"ImportPath": "github.com/tilteng/go-logger/apache_logger_mw",
+			"Rev": "3972efa3fa6c2eeff56f276bf64aa76602fca948"
+		},
+		{
 			"ImportPath": "github.com/tilteng/go-logger/logger",
-			"Rev": "8499e166bdc54371ee05b53c6f53d9cc316dde47"
+			"Rev": "3972efa3fa6c2eeff56f276bf64aa76602fca948"
 		},
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonpointer",

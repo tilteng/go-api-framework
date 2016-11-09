@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/handlers"
 	"github.com/tilteng/go-api-framework/api_framework"
 )
 
@@ -128,6 +127,8 @@ func main() {
 	controller_opts.JSONSchemaFilePath = "./schemas"
 	// HTTP path where to make json schemas available
 	controller_opts.JSONSchemaRoutePath = "/schemas"
+	// If set, where output for apache-style logging goes
+	controller_opts.ApacheLogWriter = os.Stderr
 
 	controller := api_framework.NewTiltController(controller_opts)
 
@@ -141,6 +142,6 @@ func main() {
 
 	log.Fatal(http.ListenAndServe(
 		fmt.Sprintf(":%d", port),
-		handlers.LoggingHandler(os.Stderr, controller),
+		controller,
 	))
 }

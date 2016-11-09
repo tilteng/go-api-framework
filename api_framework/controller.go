@@ -3,16 +3,19 @@ package api_framework
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
 	"github.com/tilteng/go-api-panichandler/panichandler_mw"
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/tilteng/go-api-serializers/serializers_mw"
+	"github.com/tilteng/go-logger/apache_logger_mw"
 	"github.com/tilteng/go-logger/logger"
 )
 
 type TiltControllerOpts struct {
+	// Used only for Link: header responses for json schema
 	BaseAPIURL             string
 	BaseRouter             *api_router.Router
 	ConsumesContent        []string
@@ -22,6 +25,8 @@ type TiltControllerOpts struct {
 	JSONSchemaErrorHandler jsonschema_mw.ErrorHandler
 	PanicHandler           panichandler_mw.PanicHandler
 	SerializerErrorHandler serializers_mw.ErrorHandler
+	ApacheLogWriter        io.Writer
+	ApacheLogCombined      bool
 	Logger                 logger.Logger
 }
 
@@ -44,6 +49,7 @@ type TiltController struct {
 	JSONSchemaMiddleware   *jsonschema_mw.JSONSchemaMiddleware
 	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware
 	SerializerMiddleware   *serializers_mw.SerializerMiddleware
+	ApacheLoggerMiddleware *apache_logger_mw.ApacheLoggerMiddleware
 }
 
 func (self *TiltController) ReadBody(ctx context.Context, v interface{}) error {
@@ -69,6 +75,10 @@ func (self *TiltController) NewError(status int, code string, err_str string) *E
 }
 
 func (self *TiltController) setupSchemaRoutes() error {
+	if self.JSONSchemaMiddleware == nil || self.options.JSONSchemaRoutePath == "" {
+		panic("setupSchemaRoutes() called with no middleware or route path")
+	}
+
 	schemas := self.JSONSchemaMiddleware.GetSchemas()
 
 	self.GET(self.options.JSONSchemaRoutePath, func(ctx context.Context) {
@@ -140,7 +150,24 @@ func (self *TiltController) Init() error {
 		)
 	}
 
+	if self.ApacheLoggerMiddleware == nil {
+		if self.options.ApacheLogWriter != nil {
+			self.ApacheLoggerMiddleware = apache_logger_mw.NewMiddleware(
+				self.options.ApacheLogWriter,
+				self.options.ApacheLogCombined,
+			)
+		}
+	}
+
+	// Callback for new route being added.
 	new_route_notifier := func(rt *api_router.Route, opts ...interface{}) {
+		// Wrap the original route. We want to achieve this order:
+		// apache-logger -> serializer -> panic_handler -> jsonschema
+		// Ie, we want the logger to log exactly what is returned after
+		// serialization. We want the ability to serialize panic_handler
+		// responses. And json schema validation should just happen right
+		// before we call the real route handler.
+
 		fn := rt.RouteFn()
 
 		if js_mw := self.JSONSchemaMiddleware; js_mw != nil {
@@ -155,6 +182,10 @@ func (self *TiltController) Init() error {
 
 		if ser_mw := self.SerializerMiddleware; ser_mw != nil {
 			fn = ser_mw.NewWrapper().Wrap(fn)
+		}
+
+		if log_mw := self.ApacheLoggerMiddleware; log_mw != nil {
+			fn = log_mw.NewWrapper().Wrap(fn)
 		}
 
 		rt.SetRouteFn(fn)

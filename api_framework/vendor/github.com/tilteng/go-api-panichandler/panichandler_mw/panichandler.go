@@ -6,9 +6,13 @@ import (
 	"github.com/tilteng/go-api-router/api_router"
 )
 
-type PanicHandler func(context.Context, interface{})
+type PanicHandler interface {
+	Panic(context.Context, interface{})
+}
 
-func (self PanicHandler) Panic(ctx context.Context, i interface{}) {
+type PanicHandlerFn func(context.Context, interface{})
+
+func (self PanicHandlerFn) Panic(ctx context.Context, i interface{}) {
 	self(ctx, i)
 }
 

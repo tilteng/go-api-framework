@@ -78,25 +78,15 @@ type Error struct {
 	Details interface{} `json:"details,omitempty"`
 }
 
-func NewError(status int, code string, err_str string) *Error {
-	return &Error{
-		BaseError: BaseError{
-			ID:         "ERR" + GenUUIDHex(),
-			StatusCode: status,
-		},
-		Code:  code,
-		Error: err_str,
-	}
-}
-
-func DefaultPanicHandler(ctx context.Context, v interface{}) {
+// Default PanicHandler.
+func (self *TiltController) handlePanic(ctx context.Context, v interface{}) {
 	err_cont_obj, ok := v.(*ErrorResponse)
 	if !ok {
 		if _, ok := v.(ErrorType); ok {
 			err_cont_obj = &ErrorResponse{v}
 		} else {
 			log.Printf("Something busted: %+v", v)
-			err_obj := NewError(
+			err_obj := self.NewError(
 				500,
 				"ERR_ID_INTERNAL_SERVER_ERROR",
 				"An unhandled exception has occurred",
@@ -114,20 +104,35 @@ func DefaultPanicHandler(ctx context.Context, v interface{}) {
 		}
 	}
 
-	if err_type, ok := err_cont_obj.Error.(ErrorType); ok {
-		HandleErrorType(ctx, err_type)
-	}
-
-	// TODO: Do something with error?
-	if serializers_mw.WriteSerializedResponse(ctx, err_cont_obj) == nil {
-		return
-	}
-
-	rctx := api_router.RequestContextFromContext(ctx)
-	rctx.WriteResponseString("An unknown error occurred")
+	self.WriteResponse(ctx, err_cont_obj)
 }
 
-func HandleErrorType(ctx context.Context, err ErrorType) {
+// Default SerializerErrorHandler
+func (self *TiltController) handleSerializerError(ctx context.Context, err error) {
+	rctx := api_router.RequestContextFromContext(ctx)
+	rctx.SetStatus(500)
+	rctx.WriteResponseString(err.Error())
+}
+
+// Default JSONSchemaErrorHandler
+func (self *TiltController) handleJSONSchemaError(ctx context.Context, result *jsonschema_mw.JSONSchemaResult) bool {
+	rctx := api_router.RequestContextFromContext(ctx)
+	rctx.SetStatus(400)
+	errors := result.Errors()
+	details := make([]string, len(errors), len(errors))
+	for i, err := range result.Errors() {
+		details[i] = err.String()
+	}
+	err := self.NewError(
+		400,
+		"ERR_ID_BAD_DATA",
+		"Validation for json schema failed",
+	)
+	err.Details = details
+	panic(err)
+}
+
+func (self *TiltController) handleError(ctx context.Context, err ErrorType) error {
 	rctx := api_router.RequestContextFromContext(ctx)
 
 	if err.GetStatusCode() <= 0 {
@@ -143,26 +148,17 @@ func HandleErrorType(ctx context.Context, err ErrorType) {
 	}
 
 	rctx.SetStatus(err.GetStatusCode())
+
+	return serializers_mw.WriteSerializedResponse(ctx, &ErrorResponse{err})
 }
 
-func DefaultSerializerErrorHandler(ctx context.Context, err error) {
-	rctx := api_router.RequestContextFromContext(ctx)
-	rctx.SetStatus(500)
-	rctx.WriteResponseString(err.Error())
-}
-
-func DefaultJSONSchemaErrorHandler(ctx context.Context, result *jsonschema_mw.JSONSchemaResult) bool {
-	rctx := api_router.RequestContextFromContext(ctx)
-	rctx.SetStatus(400)
-	details := []string{}
-	for _, err := range result.Errors() {
-		details = append(details, err.Description())
+func (self *TiltController) NewError(status int, code string, err_str string) *Error {
+	return &Error{
+		BaseError: BaseError{
+			ID:         "ERR" + GenUUIDHex(),
+			StatusCode: status,
+		},
+		Code:  code,
+		Error: err_str,
 	}
-	err := NewError(
-		400,
-		"ERR_ID_BAD_DATA",
-		"Validation for json schema failed",
-	)
-	err.Details = details
-	panic(err)
 }

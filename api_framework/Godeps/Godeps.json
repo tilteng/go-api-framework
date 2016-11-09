@@ -26,7 +26,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-panichandler/panichandler_mw",
-			"Rev": "aa38220390455369a3e6743f2f62c40ecfbc0d77"
+			"Rev": "3fec061c7b9a725e155f0f2144cb9b7dfec0ce36"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-router/api_router",

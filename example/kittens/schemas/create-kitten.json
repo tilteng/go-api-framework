@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "color": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [ "name" ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [ "attributes" ],
+            "additionalProperties": false
+        }
+    },
+    "required": [ "data" ],
+    "additionalProperties": false
+}

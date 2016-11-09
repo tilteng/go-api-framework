@@ -181,12 +181,16 @@ func (self *TiltController) Init() error {
 	return nil
 }
 
-func (self *TiltController) GenUUID() UUID {
+func (self *TiltController) GenUUID() *UUID {
 	return GenUUID()
 }
 
 func (self *TiltController) GenUUIDHex() string {
 	return GenUUIDHex()
+}
+
+func (self *TiltController) UUIDFromString(s string) *UUID {
+	return UUIDFromString(s)
 }
 
 func NewTiltController(opts *TiltControllerOpts) *TiltController {

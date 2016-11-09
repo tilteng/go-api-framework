@@ -6,10 +6,17 @@ import (
 	"github.com/pborman/uuid"
 )
 
-type UUID uuid.UUID
+type UUID struct {
+	uuid.UUID
+}
 
-func GenUUID() UUID {
-	return UUID(uuid.NewRandom())
+func GenUUID() *UUID {
+	uuid := uuid.NewRandom()
+	if uuid == nil {
+		return nil
+	} else {
+		return &UUID{uuid}
+	}
 }
 
 func GenUUIDHex() string {
@@ -21,4 +28,13 @@ func GenUUIDHex() string {
 			-1,
 		),
 	)
+}
+
+func UUIDFromString(s string) *UUID {
+	uuid := uuid.Parse(s)
+	if uuid == nil {
+		return nil
+	} else {
+		return &UUID{uuid}
+	}
 }

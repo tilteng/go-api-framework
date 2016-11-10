@@ -9,6 +9,7 @@ import (
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/tilteng/go-api-serializers/serializers_mw"
 	"github.com/tilteng/go-logger/apache_logger_mw"
+	"github.com/tilteng/go-metrics/metrics_mw"
 )
 
 func (self *TiltController) setupSchemaRoutes() error {
@@ -72,6 +73,10 @@ func (self *TiltController) setupDefaultOptions() error {
 		self.options.JSONSchemaErrorHandler = self.handleJSONSchemaError
 	}
 
+	if mcli := self.options.MetricsClient; mcli != nil && self.MetricsMiddleware == nil {
+		self.MetricsMiddleware = metrics_mw.NewMiddleware(mcli)
+	}
+
 	if self.PanicHandlerMiddleware == nil {
 		self.PanicHandlerMiddleware = panichandler_mw.NewMiddleware(
 			self.options.PanicHandler,
@@ -118,7 +123,7 @@ func (self *TiltController) setupDefaultOptions() error {
 }
 
 // Wrap the original route. We want to achieve this order:
-// apache-logger -> serializer -> panic_handler -> jsonschema
+// metrics -> apache-logger -> serializer -> panic_handler -> jsonschema
 // Ie, we want the logger to log exactly what is returned after
 // serialization. We want the ability to serialize panic_handler
 // responses. And json schema validation should just happen right
@@ -142,6 +147,10 @@ func (self *TiltController) wrapNewRoute(rt *api_router.Route, opts ...interface
 
 	if log_mw := self.ApacheLoggerMiddleware; log_mw != nil {
 		fn = log_mw.NewWrapper().Wrap(fn)
+	}
+
+	if metrics_mw := self.MetricsMiddleware; metrics_mw != nil {
+		fn = metrics_mw.NewWrapper().Wrap(fn)
 	}
 
 	rt.SetRouteFn(fn)

@@ -11,6 +11,8 @@ import (
 	"github.com/tilteng/go-api-serializers/serializers_mw"
 	"github.com/tilteng/go-logger/apache_logger_mw"
 	"github.com/tilteng/go-logger/logger"
+	"github.com/tilteng/go-metrics/metrics"
+	"github.com/tilteng/go-metrics/metrics_mw"
 )
 
 type TiltControllerOpts struct {
@@ -26,6 +28,7 @@ type TiltControllerOpts struct {
 	SerializerErrorHandler serializers_mw.ErrorHandler
 	ApacheLogWriter        io.Writer
 	ApacheLogCombined      bool
+	MetricsClient          metrics.MetricsClient
 	Logger                 logger.Logger
 }
 
@@ -37,6 +40,7 @@ type TiltController struct {
 	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware
 	SerializerMiddleware   *serializers_mw.SerializerMiddleware
 	ApacheLoggerMiddleware *apache_logger_mw.ApacheLoggerMiddleware
+	MetricsMiddleware      *metrics_mw.MetricsMiddleware
 }
 
 func (self *TiltController) ReadBody(ctx context.Context, v interface{}) error {

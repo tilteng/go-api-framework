@@ -12,9 +12,8 @@ var ErrInternalServerError = errors.ErrInternalServerError
 var ErrJSONSchemaValidationFailed = errors.ErrJSONSchemaValidationFailed
 
 // Default ErrorFormatter
-func (self *TiltController) errorFormatter(errs ...*errors.Error) interface{} {
-	jsonapi_errs := errors.Errors(errs)
-	return jsonapi_errs.AsJSONAPIResponse()
+func (self *TiltController) errorFormatter(errs errors.Errors) interface{} {
+	return errs.AsJSONAPIResponse()
 }
 
 // Default PanicHandler.
@@ -36,18 +35,16 @@ func (self *TiltController) handleSerializerError(ctx context.Context, err error
 
 // Default JSONSchemaErrorHandler
 func (self *TiltController) handleJSONSchemaError(ctx context.Context, result *jsonschema_mw.JSONSchemaResult) bool {
-	rctx := api_router.RequestContextFromContext(ctx)
-	rctx.SetStatus(400)
 	json_errors := result.Errors()
 
-	api_errors := make([]*errors.Error, 0, len(json_errors))
+	api_errors := make(errors.Errors, len(json_errors), len(json_errors))
 	for i, json_err := range json_errors {
 		err := ErrJSONSchemaValidationFailed.New(0)
 		err.Details = json_err.String()
 		api_errors[i] = err
 	}
 
-	self.WriteResponse(ctx, self.errorFormatter(api_errors...))
+	self.WriteResponse(ctx, api_errors)
 
 	return false
 }

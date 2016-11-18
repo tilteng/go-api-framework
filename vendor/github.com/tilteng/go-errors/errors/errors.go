@@ -30,7 +30,7 @@ func (self *ErrorClass) newError(status int, forceFrames bool, skip int) *Error 
 }
 
 func (self *ErrorClass) New(status int) *Error {
-	return self.newError(status, false, 0)
+	return self.newError(status, false, 1)
 }
 
 func (self *ErrorClass) NewWithStack(status int, skip int) *Error {

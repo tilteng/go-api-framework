@@ -2,6 +2,7 @@ package api_framework
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
@@ -79,6 +80,13 @@ func (self *TiltController) setupDefaultOptions() error {
 
 	if mcli := self.options.MetricsClient; mcli != nil && self.MetricsMiddleware == nil {
 		self.MetricsMiddleware = metrics_mw.NewMiddleware(mcli)
+	}
+
+	if self.ErrorFormatter == nil {
+		if self.options.ErrorFormatter == nil {
+			return errors.New("An error formatter is required")
+		}
+		self.ErrorFormatter = self.options.ErrorFormatter
 	}
 
 	if self.PanicHandlerMiddleware == nil {

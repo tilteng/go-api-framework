@@ -16,14 +16,14 @@ import (
 	"github.com/tilteng/go-metrics/metrics_mw"
 )
 
-type ErrorFormatterFn func(...*errors.Error) interface{}
+type ErrorFormatterFn func(errors.Errors) interface{}
 
-func (self ErrorFormatterFn) FormatErrors(errs ...*errors.Error) interface{} {
-	return self(errs...)
+func (self ErrorFormatterFn) FormatErrors(errs errors.Errors) interface{} {
+	return self(errs)
 }
 
 type ErrorFormatter interface {
-	FormatErrors(...*errors.Error) interface{}
+	FormatErrors(errors.Errors) interface{}
 }
 
 type TiltControllerOpts struct {
@@ -61,24 +61,43 @@ func (self *TiltController) ReadBody(ctx context.Context, v interface{}) error {
 }
 
 func (self *TiltController) WriteResponse(ctx context.Context, v interface{}) error {
-	var err error
+	var errs_obj errors.Errors
 
-	if err_obj, ok := v.(*errors.Error); ok {
-		if err_obj.Status >= 500 {
-			if json, err := err_obj.AsJSON(); err == nil {
-				self.Logger.Errorf("Returning exception: %s", json)
+	if val, ok := v.(errors.Errors); ok {
+		errs_obj = val
+	} else if val, ok := v.([]*errors.Error); ok {
+		errs_obj = errors.Errors(val)
+	} else if val, ok := v.(*errors.Error); ok {
+		errs_obj = errors.Errors([]*errors.Error{val})
+	}
+
+	if errs_obj != nil {
+		rctx := api_router.RequestContextFromContext(ctx)
+		rctx.SetStatus(errs_obj[0].Status)
+
+		if errs_obj[0].Status >= 500 {
+			var json string
+			var json_err error
+
+			if len(errs_obj) == 1 {
+				json, json_err = errs_obj[0].AsJSON()
 			} else {
-				self.Logger.Errorf("Returning exception: %s", v)
+				json, json_err = errs_obj.AsJSON()
+			}
+
+			if json_err != nil {
+				self.Logger.Errorf("Returning exception: %+v", errs_obj)
+			} else {
+				self.Logger.Error("Returning exception: " + json)
 			}
 		}
-		rctx := api_router.RequestContextFromContext(ctx)
-		rctx.SetStatus(err_obj.Status)
-		resp := self.errorFormatter(err_obj)
-		err = serializers_mw.WriteSerializedResponse(ctx, resp)
-	} else {
-		err = serializers_mw.WriteSerializedResponse(ctx, v)
+
+		resp := self.ErrorFormatter.FormatErrors(errs_obj)
+
+		return serializers_mw.WriteSerializedResponse(ctx, resp)
 	}
-	return err
+
+	return serializers_mw.WriteSerializedResponse(ctx, v)
 }
 
 func (self *TiltController) GenUUID() *UUID {

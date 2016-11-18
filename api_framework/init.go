@@ -2,6 +2,7 @@ package api_framework
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
@@ -54,60 +55,6 @@ func (self *Controller) setupSchemaRoutes() error {
 	return nil
 }
 
-func (self *Controller) setupDefaultOptions() error {
-	if self.options.BaseRouter == nil {
-		self.options.BaseRouter = api_router.NewMuxRouter()
-	}
-
-	if mcli := self.options.MetricsClient; mcli != nil && self.MetricsMiddleware == nil {
-		self.MetricsMiddleware = metrics_mw.NewMiddleware(mcli)
-	}
-
-	if self.PanicHandlerMiddleware == nil {
-		self.PanicHandlerMiddleware = panichandler_mw.NewMiddleware(
-			panichandler_mw.PanicHandlerFn(self.handlePanic),
-		)
-	}
-
-	if self.JSONSchemaMiddleware == nil && self.options.JSONSchemaFilePath != "" {
-		var route_prefix string
-		if rp := self.options.JSONSchemaRoutePath; rp != "" {
-			route_prefix = self.options.BaseAPIURL + rp
-		}
-
-		js_mw := jsonschema_mw.NewMiddlewareWithLinkPathPrefix(
-			self.handleJSONSchemaError,
-			route_prefix,
-		).SetLogger(self.options.Logger)
-
-		err := js_mw.LoadFromPath(self.options.JSONSchemaFilePath)
-		if err != nil {
-			return err
-		}
-
-		self.JSONSchemaMiddleware = js_mw
-	}
-
-	if self.SerializerMiddleware == nil {
-		self.SerializerMiddleware = serializers_mw.NewMiddleware(
-			self.options.ConsumesContent,
-			self.options.ProducesContent,
-			self.handleSerializerError,
-		)
-	}
-
-	if self.ApacheLoggerMiddleware == nil {
-		if self.options.ApacheLogWriter != nil {
-			self.ApacheLoggerMiddleware = apache_logger_mw.NewMiddleware(
-				self.options.ApacheLogWriter,
-				self.options.ApacheLogCombined,
-			)
-		}
-	}
-
-	return nil
-}
-
 // Wrap the original route. We want to achieve this order:
 // metrics -> apache-logger -> serializer -> panic_handler -> jsonschema
 // Ie, we want the logger to log exactly what is returned after
@@ -149,22 +96,73 @@ func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) 
 
 	rt.SetRouteFn(fn)
 
-	if logger := self.options.Logger; logger != nil {
-		logger.Debugf("Registered route: %s %s", rt.Method(), rt.FullPath())
-	}
+	self.LogDebug("Registered route:", rt.Method(), rt.FullPath())
 }
 
 // Final initialization that should be called before registering routes.
 // If you wish to modify any defaults on Controller, you should do this
 // before calling Init()
 func (self *Controller) Init() error {
-	if err := self.setupDefaultOptions(); err != nil {
-		return err
+	if self.Logger == nil {
+		if self.options.Logger == nil {
+			return errors.New("Must have a logger")
+		}
+		self.Logger = self.options.Logger
+	}
+
+	self.Router.SetNewRouteNotifier(self.wrapNewRoute)
+
+	if self.options.BaseRouter == nil {
+		self.options.BaseRouter = api_router.NewMuxRouter()
 	}
 
 	self.Router = self.options.BaseRouter
-	self.Logger = self.options.Logger
-	self.Router.SetNewRouteNotifier(self.wrapNewRoute)
+
+	if mcli := self.options.MetricsClient; mcli != nil && self.MetricsMiddleware == nil {
+		self.MetricsMiddleware = metrics_mw.NewMiddleware(mcli)
+	}
+
+	if self.PanicHandlerMiddleware == nil {
+		self.PanicHandlerMiddleware = panichandler_mw.NewMiddleware(
+			panichandler_mw.PanicHandlerFn(self.handlePanic),
+		)
+	}
+
+	if self.JSONSchemaMiddleware == nil && self.options.JSONSchemaFilePath != "" {
+		var route_prefix string
+		if rp := self.options.JSONSchemaRoutePath; rp != "" {
+			route_prefix = self.options.BaseAPIURL + rp
+		}
+
+		js_mw := jsonschema_mw.NewMiddlewareWithLinkPathPrefix(
+			self.handleJSONSchemaError,
+			route_prefix,
+		).SetLogger(self.Logger)
+
+		err := js_mw.LoadFromPath(self.options.JSONSchemaFilePath)
+		if err != nil {
+			return err
+		}
+
+		self.JSONSchemaMiddleware = js_mw
+	}
+
+	if self.SerializerMiddleware == nil {
+		self.SerializerMiddleware = serializers_mw.NewMiddleware(
+			self.options.ConsumesContent,
+			self.options.ProducesContent,
+			self.handleSerializerError,
+		)
+	}
+
+	if self.ApacheLoggerMiddleware == nil {
+		if self.options.ApacheLogWriter != nil {
+			self.ApacheLoggerMiddleware = apache_logger_mw.NewMiddleware(
+				self.options.ApacheLogWriter,
+				self.options.ApacheLogCombined,
+			)
+		}
+	}
 
 	if self.JSONSchemaMiddleware != nil && self.options.JSONSchemaRoutePath != "" {
 		if err := self.setupSchemaRoutes(); err != nil {

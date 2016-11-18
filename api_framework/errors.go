@@ -21,6 +21,18 @@ func (self *Controller) formatErrors(ctx context.Context, errtype errors.ErrorTy
 
 // Called when a panic occurs. Pass to custom callback, if set.
 func (self *Controller) handlePanic(ctx context.Context, v interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			self.LogErrorf(
+				"Received panic while processing another panic: %+v",
+				r,
+			)
+			rctx := self.RequestContext(ctx)
+			rctx.SetStatus(500)
+			rctx.WriteResponse(ctx, nil)
+		}
+	}()
+
 	var rctx *RequestContext
 	ctx, rctx = self.getContexts(ctx)
 

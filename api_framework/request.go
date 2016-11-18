@@ -19,8 +19,8 @@ func (self *contextKey) String() string {
 
 type RequestContext struct {
 	*api_router.RequestContext
+	logger.Logger
 	controller               *Controller
-	logger                   logger.Logger
 	serializerRequestContext serializers_mw.RequestContext
 }
 
@@ -30,9 +30,9 @@ func (self *Controller) newRequestContextFromContext(ctx context.Context) *Reque
 	rctx := self.Router.RequestContext(ctx)
 	ser_rctx := serializers_mw.RequestContextFromContext(ctx)
 	return &RequestContext{
-		RequestContext: rctx,
-		controller:     self,
-		logger:         self.Logger,
+		RequestContext:           rctx,
+		Logger:                   self.Logger,
+		controller:               self,
 		serializerRequestContext: ser_rctx,
 	}
 }
@@ -49,9 +49,9 @@ func (self *RequestContext) WriteResponse(ctx context.Context, v interface{}) er
 		if status >= 500 {
 			json, json_err := tilterr.AsJSON()
 			if json_err != nil {
-				self.logger.Errorf("Returning exception: %+v", tilterr)
+				self.LogErrorf("Returning exception: %+v", tilterr)
 			} else {
-				self.logger.Error("Returning exception: " + json)
+				self.LogError("Returning exception: " + json)
 			}
 		}
 

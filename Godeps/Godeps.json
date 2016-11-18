@@ -17,6 +17,10 @@
 			"Rev": "09566b9502a4901761da924b4971011dc0376391"
 		},
 		{
+			"ImportPath": "github.com/comstud/go-rollbar/rollbar",
+			"Rev": "e9a279c398de84b1e35406fc31814ed4b626b493"
+		},
+		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.1-27-g757bef9",
 			"Rev": "757bef944d0f21880861c2dd9c871ca543023cba"
@@ -27,7 +31,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-jsonschema/jsonschema_mw",
-			"Rev": "ef3448bdf364ae1508414140ceb950a76911c6e1"
+			"Rev": "5b91ee07f0be8faa5660b281edf01b72e9379bdb"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-panichandler/panichandler_mw",
@@ -47,11 +51,11 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/apache_logger_mw",
-			"Rev": "910f06ccf26d71ee445d18cdb6b7508ae1afa9b9"
+			"Rev": "391adafe62c2ae92986f371d25ef3c478075fa03"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/logger",
-			"Rev": "910f06ccf26d71ee445d18cdb6b7508ae1afa9b9"
+			"Rev": "391adafe62c2ae92986f371d25ef3c478075fa03"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics",

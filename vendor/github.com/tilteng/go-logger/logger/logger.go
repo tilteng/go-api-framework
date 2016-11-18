@@ -6,14 +6,14 @@ import (
 )
 
 type Logger interface {
-	Debug(v ...interface{})
-	Debugf(fmt string, v ...interface{})
-	Error(v ...interface{})
-	Errorf(fmt string, v ...interface{})
-	Info(v ...interface{})
-	Infof(fmt string, v ...interface{})
-	Warn(v ...interface{})
-	Warnf(fmt string, v ...interface{})
+	LogDebug(v ...interface{})
+	LogDebugf(fmt string, v ...interface{})
+	LogError(v ...interface{})
+	LogErrorf(fmt string, v ...interface{})
+	LogInfo(v ...interface{})
+	LogInfof(fmt string, v ...interface{})
+	LogWarn(v ...interface{})
+	LogWarnf(fmt string, v ...interface{})
 }
 
 type DefaultLogger struct {
@@ -27,35 +27,35 @@ func prependString(s string, v []interface{}) []interface{} {
 	return nv
 }
 
-func (self *DefaultLogger) Debug(v ...interface{}) {
+func (self *DefaultLogger) LogDebug(v ...interface{}) {
 	self.logger.Println(prependString("[DEBUG]", v)...)
 }
 
-func (self *DefaultLogger) Debugf(fmt string, v ...interface{}) {
+func (self *DefaultLogger) LogDebugf(fmt string, v ...interface{}) {
 	self.logger.Printf("[DEBUG] "+fmt, v...)
 }
 
-func (self *DefaultLogger) Error(v ...interface{}) {
+func (self *DefaultLogger) LogError(v ...interface{}) {
 	self.logger.Println(prependString("[ERROR]", v)...)
 }
 
-func (self *DefaultLogger) Errorf(fmt string, v ...interface{}) {
+func (self *DefaultLogger) LogErrorf(fmt string, v ...interface{}) {
 	self.logger.Printf("[ERROR] "+fmt, v...)
 }
 
-func (self *DefaultLogger) Info(v ...interface{}) {
+func (self *DefaultLogger) LogInfo(v ...interface{}) {
 	self.logger.Println(prependString("[INFO]", v)...)
 }
 
-func (self *DefaultLogger) Infof(fmt string, v ...interface{}) {
+func (self *DefaultLogger) LogInfof(fmt string, v ...interface{}) {
 	self.logger.Printf("[INFO] "+fmt, v...)
 }
 
-func (self *DefaultLogger) Warn(v ...interface{}) {
+func (self *DefaultLogger) LogWarn(v ...interface{}) {
 	self.logger.Println(prependString("[WARN]", v)...)
 }
 
-func (self *DefaultLogger) Warnf(fmt string, v ...interface{}) {
+func (self *DefaultLogger) LogWarnf(fmt string, v ...interface{}) {
 	self.logger.Printf("[WARN] "+fmt, v...)
 }
 

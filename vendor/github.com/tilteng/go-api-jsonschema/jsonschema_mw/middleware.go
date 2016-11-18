@@ -101,7 +101,7 @@ func (self *JSONSchemaMiddleware) LoadFromPath(base_path string) error {
 		}
 
 		if self.logger != nil {
-			self.logger.Debugf("Loaded schema %s", name)
+			self.logger.LogDebugf("Loaded schema %s", name)
 		}
 
 		return nil

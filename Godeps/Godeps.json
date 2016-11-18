@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/tilteng/go-api-framework/api_framework",
+	"ImportPath": "github.com/tilteng/go-api-framework",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Packages": [
@@ -15,6 +15,10 @@
 			"ImportPath": "github.com/DataDog/datadog-go/statsd",
 			"Comment": "1.0.0-3-g09566b9",
 			"Rev": "09566b9502a4901761da924b4971011dc0376391"
+		},
+		{
+			"ImportPath": "github.com/comstud/go-rollbar/rollbar",
+			"Rev": "358bb25440ddc07d272b026b40c9e1de822633fe"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
@@ -40,6 +44,10 @@
 		{
 			"ImportPath": "github.com/tilteng/go-api-serializers/serializers_mw",
 			"Rev": "342c7c6a4c557368931f9bf2771fc9c8afd619ef"
+		},
+		{
+			"ImportPath": "github.com/tilteng/go-errors/errors",
+			"Rev": "048943f374a11989d1003e6383a74b97b74f11f6"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/apache_logger_mw",

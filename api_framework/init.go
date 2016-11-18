@@ -59,6 +59,10 @@ func (self *TiltController) setupDefaultOptions() error {
 		self.options.BaseRouter = api_router.NewMuxRouter()
 	}
 
+	if self.options.ErrorFormatter == nil {
+		self.options.ErrorFormatter = ErrorFormatterFn(self.errorFormatter)
+	}
+
 	if self.options.PanicHandler == nil {
 		self.options.PanicHandler = panichandler_mw.PanicHandlerFn(
 			self.handlePanic,

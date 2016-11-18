@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/tilteng/go-api-framework/api_framework"
+	"github.com/tilteng/go-errors/errors"
 )
 
 // Our controller! It embeds a TiltController.
@@ -17,6 +18,20 @@ type KittensController struct {
 
 // Track our created kittens in memory for this example
 var kittens = map[string]*Kitten{}
+
+// ErrorClasses
+var ErrInvalidKittenID = &errors.ErrorClass{
+	Name:    "ErrInvalidKittenID",
+	Code:    "ERR_ID_INVALID_KITTEN_ID",
+	Status:  400,
+	Message: "Invalid kitten id specified",
+}
+var ErrKittenNotFound = &errors.ErrorClass{
+	Name:    "ErrKittenNotFound",
+	Code:    "ERR_ID_KITTEN_NOT_FOUND",
+	Status:  404,
+	Message: "No kitten found with that id",
+}
 
 // Used for deserializing POST data. jsonapi spec says you should use
 // { "data": { "attributes": { ... } } }
@@ -76,9 +91,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	if uuid == nil {
 		self.WriteResponse(
 			ctx,
-			// NewError() is a common way to form errors presented from
-			// TiltController. I think I'm going to be modifying this yet.
-			self.NewError(400, "ERR_ID_INVALID_KITTEN_ID", "Invalid id specified"),
+			ErrInvalidKittenID.New(0),
 		)
 		return
 	}
@@ -86,7 +99,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	if !ok {
 		self.WriteResponse(
 			ctx,
-			self.NewError(404, "ERR_ID_KITTEN_NOT_FOUND", "No kitten found with that id"),
+			ErrKittenNotFound.New(0),
 		)
 		return
 	}

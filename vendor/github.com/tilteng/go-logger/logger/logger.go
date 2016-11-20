@@ -20,9 +20,15 @@ type DefaultLogger struct {
 	logger *log.Logger
 }
 
+func prependString(s string, v []interface{}) []interface{} {
+	nv := make([]interface{}, 1+len(v), 1+len(v))
+	nv[0] = s
+	copy(nv[1:], v)
+	return nv
+}
+
 func (self *DefaultLogger) Debug(v ...interface{}) {
-	v = append([]interface{}{"[DEBUG]"}, v...)
-	self.logger.Print(v)
+	self.logger.Println(prependString("[DEBUG]", v)...)
 }
 
 func (self *DefaultLogger) Debugf(fmt string, v ...interface{}) {
@@ -30,8 +36,7 @@ func (self *DefaultLogger) Debugf(fmt string, v ...interface{}) {
 }
 
 func (self *DefaultLogger) Error(v ...interface{}) {
-	v = append([]interface{}{"[ERROR]"}, v...)
-	self.logger.Print(v...)
+	self.logger.Println(prependString("[ERROR]", v)...)
 }
 
 func (self *DefaultLogger) Errorf(fmt string, v ...interface{}) {
@@ -39,8 +44,7 @@ func (self *DefaultLogger) Errorf(fmt string, v ...interface{}) {
 }
 
 func (self *DefaultLogger) Info(v ...interface{}) {
-	v = append([]interface{}{"[INFO]"}, v...)
-	self.logger.Print(v...)
+	self.logger.Println(prependString("[INFO]", v)...)
 }
 
 func (self *DefaultLogger) Infof(fmt string, v ...interface{}) {
@@ -48,8 +52,7 @@ func (self *DefaultLogger) Infof(fmt string, v ...interface{}) {
 }
 
 func (self *DefaultLogger) Warn(v ...interface{}) {
-	v = append([]interface{}{"[WARN]"}, v...)
-	self.logger.Print(v...)
+	self.logger.Println(prependString("[WARN]", v)...)
 }
 
 func (self *DefaultLogger) Warnf(fmt string, v ...interface{}) {

@@ -121,12 +121,17 @@ func NewMiddleware(consumes, produces []string, error_handler ErrorHandler) *Ser
 	}
 }
 
+func RequestContextFromContext(ctx context.Context) RequestContext {
+	mw_rctx, _ := ctx.Value(requestContextCtxKey).(*requestContext)
+	return mw_rctx
+}
+
 func WriteSerializedResponse(ctx context.Context, v interface{}) error {
 	mw_rctx, ok := ctx.Value(requestContextCtxKey).(*requestContext)
 	if !ok {
 		return errors.New("Request did not pass through serializers middleware")
 	}
-	return mw_rctx.WriteSerializedResponse(v)
+	return mw_rctx.WriteSerializedResponse(ctx, v)
 }
 
 func DeserializedBody(ctx context.Context, v interface{}) error {
@@ -134,5 +139,5 @@ func DeserializedBody(ctx context.Context, v interface{}) error {
 	if !ok {
 		return errors.New("Request did not pass through serializers middleware")
 	}
-	return mw_rctx.DeserializedBody(v)
+	return mw_rctx.DeserializedBody(ctx, v)
 }

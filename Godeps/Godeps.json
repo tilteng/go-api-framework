@@ -39,11 +39,11 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-serializers/serializers_mw",
-			"Rev": "342c7c6a4c557368931f9bf2771fc9c8afd619ef"
+			"Rev": "93cb99fb38e75749d9c659c52c3ac829e4ca778b"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",
-			"Rev": "cd5dabdb36dbc4de908ce8633f62a1169b5f630a"
+			"Rev": "ef4aaefbfd02171c8d4d19e2790e6bff2beb0f8e"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/apache_logger_mw",

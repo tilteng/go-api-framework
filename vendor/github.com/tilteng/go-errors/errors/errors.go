@@ -28,13 +28,24 @@ func (self *ErrorClass) newError(forceFrames bool, skip int) *Error {
 }
 
 // Create an instance of an error
-func (self *ErrorClass) New() *Error {
-	return self.newError(false, 1)
+// Create an instance of an error. Takes an optional argument to use to
+// set internal details
+func (self *ErrorClass) New(v ...interface{}) *Error {
+	err := self.newError(false, 1)
+	if v != nil && len(v) > 0 {
+		err.SetInternal(v[0])
+	}
+	return err
 }
 
-// Create an instance of an error, including a stacktrace
-func (self *ErrorClass) NewWithStack(skip int) *Error {
-	return self.newError(true, 1+skip)
+// Create an instance of an error, including a stacktrace. Takes an optional
+// argument to use to set internal details
+func (self *ErrorClass) NewWithStack(skip int, v ...interface{}) *Error {
+	err := self.newError(true, 1+skip)
+	if v != nil && len(v) > 0 {
+		err.SetInternal(v[0])
+	}
+	return err
 }
 
 // Interface that both Error and Errors satisfies

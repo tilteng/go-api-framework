@@ -1,6 +1,7 @@
 package serializers_mw
 
 import (
+	"context"
 	"io"
 
 	"github.com/tilteng/go-api-router/api_router"
@@ -18,13 +19,18 @@ var serializers = map[string]Serializer{
 	"application/json": _jsonSerializer,
 }
 
+type RequestContext interface {
+	WriteSerializedResponse(context.Context, interface{}) error
+	DeserializedBody(context.Context, interface{}) error
+}
+
 type requestContext struct {
 	rctx         *api_router.RequestContext
 	deserializer Serializer
 	serializer   Serializer
 }
 
-func (self *requestContext) WriteSerializedResponse(v interface{}) error {
+func (self *requestContext) WriteSerializedResponse(_ context.Context, v interface{}) error {
 	self.rctx.WriteStatusHeader()
 	return self.serializer.SerializeToWriter(
 		self.rctx.ResponseWriter(),
@@ -32,7 +38,7 @@ func (self *requestContext) WriteSerializedResponse(v interface{}) error {
 	)
 }
 
-func (self *requestContext) DeserializedBody(v interface{}) error {
+func (self *requestContext) DeserializedBody(_ context.Context, v interface{}) error {
 	return self.deserializer.DeserializeFromReader(
 		self.rctx.Body(),
 		v,

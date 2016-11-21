@@ -16,14 +16,14 @@ import (
 	"github.com/tilteng/go-metrics/metrics_mw"
 )
 
-type ErrorFormatterFn func(errors.ErrorType) interface{}
+type ErrorFormatterFn func(context.Context, errors.ErrorType) interface{}
 
-func (self ErrorFormatterFn) FormatErrors(err errors.ErrorType) interface{} {
-	return self(err)
+func (self ErrorFormatterFn) FormatErrors(ctx context.Context, err errors.ErrorType) interface{} {
+	return self(ctx, err)
 }
 
 type ErrorFormatter interface {
-	FormatErrors(errors.ErrorType) interface{}
+	FormatErrors(context.Context, errors.ErrorType) interface{}
 }
 
 type ControllerOpts struct {
@@ -48,39 +48,16 @@ type Controller struct {
 	*api_router.Router
 	logger.Logger
 	options                *ControllerOpts
+	errorFormatter         ErrorFormatter
 	JSONSchemaMiddleware   *jsonschema_mw.JSONSchemaMiddleware
 	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware
 	SerializerMiddleware   *serializers_mw.SerializerMiddleware
 	ApacheLoggerMiddleware *apache_logger_mw.ApacheLoggerMiddleware
 	MetricsMiddleware      *metrics_mw.MetricsMiddleware
-	ErrorFormatter         ErrorFormatter
 }
 
-func (self *Controller) ReadBody(ctx context.Context, v interface{}) error {
-	return serializers_mw.DeserializedBody(ctx, v)
-}
-
-func (self *Controller) WriteResponse(ctx context.Context, v interface{}) error {
-	if tilterr, ok := v.(errors.ErrorType); ok {
-		rctx := api_router.RequestContextFromContext(ctx)
-		status := tilterr.GetStatus()
-		rctx.SetStatus(status)
-
-		if status >= 500 {
-			json, json_err := tilterr.AsJSON()
-			if json_err != nil {
-				self.Logger.Errorf("Returning exception: %+v", tilterr)
-			} else {
-				self.Logger.Error("Returning exception: " + json)
-			}
-		}
-
-		resp := self.ErrorFormatter.FormatErrors(tilterr)
-
-		return serializers_mw.WriteSerializedResponse(ctx, resp)
-	}
-
-	return serializers_mw.WriteSerializedResponse(ctx, v)
+func (self *Controller) RequestContext(ctx context.Context) *RequestContext {
+	return RequestContextFromContext(ctx)
 }
 
 func (self *Controller) GenUUID() *UUID {
@@ -105,5 +82,14 @@ func NewControllerOpts() *ControllerOpts {
 }
 
 func NewController(opts *ControllerOpts) *Controller {
-	return &Controller{options: opts}
+	c := &Controller{
+		options: opts,
+	}
+	c.errorFormatter = ErrorFormatterFn(c.formatErrors)
+	return c
+}
+
+func RequestContextFromContext(ctx context.Context) *RequestContext {
+	controller_rctx, _ := ctx.Value(requestContextCtxKey).(*RequestContext)
+	return controller_rctx
 }

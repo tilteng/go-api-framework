@@ -2,7 +2,6 @@ package api_framework
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
@@ -60,38 +59,13 @@ func (self *Controller) setupDefaultOptions() error {
 		self.options.BaseRouter = api_router.NewMuxRouter()
 	}
 
-	if self.options.ErrorFormatter == nil {
-		self.options.ErrorFormatter = ErrorFormatterFn(self.errorFormatter)
-	}
-
-	if self.options.PanicHandler == nil {
-		self.options.PanicHandler = panichandler_mw.PanicHandlerFn(
-			self.handlePanic,
-		)
-	}
-
-	if self.options.SerializerErrorHandler == nil {
-		self.options.SerializerErrorHandler = self.handleSerializerError
-	}
-
-	if self.options.JSONSchemaErrorHandler == nil {
-		self.options.JSONSchemaErrorHandler = self.handleJSONSchemaError
-	}
-
 	if mcli := self.options.MetricsClient; mcli != nil && self.MetricsMiddleware == nil {
 		self.MetricsMiddleware = metrics_mw.NewMiddleware(mcli)
 	}
 
-	if self.ErrorFormatter == nil {
-		if self.options.ErrorFormatter == nil {
-			return errors.New("An error formatter is required")
-		}
-		self.ErrorFormatter = self.options.ErrorFormatter
-	}
-
 	if self.PanicHandlerMiddleware == nil {
 		self.PanicHandlerMiddleware = panichandler_mw.NewMiddleware(
-			self.options.PanicHandler,
+			panichandler_mw.PanicHandlerFn(self.handlePanic),
 		)
 	}
 
@@ -102,7 +76,7 @@ func (self *Controller) setupDefaultOptions() error {
 		}
 
 		js_mw := jsonschema_mw.NewMiddlewareWithLinkPathPrefix(
-			self.options.JSONSchemaErrorHandler,
+			self.handleJSONSchemaError,
 			route_prefix,
 		).SetLogger(self.options.Logger)
 
@@ -118,7 +92,7 @@ func (self *Controller) setupDefaultOptions() error {
 		self.SerializerMiddleware = serializers_mw.NewMiddleware(
 			self.options.ConsumesContent,
 			self.options.ProducesContent,
-			self.options.SerializerErrorHandler,
+			self.handleSerializerError,
 		)
 	}
 
@@ -141,7 +115,15 @@ func (self *Controller) setupDefaultOptions() error {
 // responses. And json schema validation should just happen right
 // before we call the real route handler.
 func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) {
-	fn := rt.RouteFn()
+	orig_fn := rt.RouteFn()
+
+	// Create our Request right before calling middleware
+	fn := func(ctx context.Context) {
+		ctx, _ = self.getContexts(ctx)
+		orig_fn(ctx)
+	}
+
+	// Wrap with our request last
 
 	if js_mw := self.JSONSchemaMiddleware; js_mw != nil {
 		if wrapper := js_mw.NewWrapperFromRouteOptions(opts...); wrapper != nil {

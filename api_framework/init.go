@@ -13,7 +13,7 @@ import (
 	"github.com/tilteng/go-metrics/metrics_mw"
 )
 
-func (self *TiltController) setupSchemaRoutes() error {
+func (self *Controller) setupSchemaRoutes() error {
 	if self.JSONSchemaMiddleware == nil || self.options.JSONSchemaRoutePath == "" {
 		panic("setupSchemaRoutes() called with no middleware or route path")
 	}
@@ -55,7 +55,7 @@ func (self *TiltController) setupSchemaRoutes() error {
 	return nil
 }
 
-func (self *TiltController) setupDefaultOptions() error {
+func (self *Controller) setupDefaultOptions() error {
 	if self.options.BaseRouter == nil {
 		self.options.BaseRouter = api_router.NewMuxRouter()
 	}
@@ -140,7 +140,7 @@ func (self *TiltController) setupDefaultOptions() error {
 // serialization. We want the ability to serialize panic_handler
 // responses. And json schema validation should just happen right
 // before we call the real route handler.
-func (self *TiltController) wrapNewRoute(rt *api_router.Route, opts ...interface{}) {
+func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) {
 	fn := rt.RouteFn()
 
 	if js_mw := self.JSONSchemaMiddleware; js_mw != nil {
@@ -173,9 +173,9 @@ func (self *TiltController) wrapNewRoute(rt *api_router.Route, opts ...interface
 }
 
 // Final initialization that should be called before registering routes.
-// If you wish to modify any defaults on TiltController, you should do this
+// If you wish to modify any defaults on Controller, you should do this
 // before calling Init()
-func (self *TiltController) Init() error {
+func (self *Controller) Init() error {
 	if err := self.setupDefaultOptions(); err != nil {
 		return err
 	}

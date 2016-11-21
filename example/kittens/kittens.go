@@ -11,9 +11,9 @@ import (
 	"github.com/tilteng/go-errors/errors"
 )
 
-// Our controller! It embeds a TiltController.
+// Our controller! It embeds a Controller.
 type KittensController struct {
-	*api_framework.TiltController
+	*api_framework.Controller
 }
 
 // Track our created kittens in memory for this example
@@ -51,7 +51,7 @@ type Kitten struct {
 
 func (self *KittensController) AddKitten(ctx context.Context) {
 	body_obj := &createKittenBody{}
-	// ReadBody() is a method on the TiltController struct. It handles
+	// ReadBody() is a method on the Controller struct. It handles
 	// deserializing the body into whatever object you pass. If you're
 	// using the json schema middleware, the body has already been validated
 	// against the schema by this point.
@@ -64,7 +64,7 @@ func (self *KittensController) AddKitten(ctx context.Context) {
 	}
 	kittens[kitten.Id.String()] = kitten
 
-	// WriteResponse() is a method on the TiltController struct. It handles
+	// WriteResponse() is a method on the Controller struct. It handles
 	// serializing your data according to Accept: header and returing the
 	// response. POST routes automatically send back a 201 status code.
 	// See GET example below to see how you can return a differnt code.
@@ -78,12 +78,12 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	// go-api-router exports a function 'RequestContextFromContext' that you
 	// can use, instead. But I made the convenience method on the Router,
 	// because it eliminates the need to import go-api-router. I think I
-	// may move the method to the TiltController, though, instead of having
+	// may move the method to the Controller, though, instead of having
 	// it on go-api-router.Router.
 	rctx := self.RequestContext(ctx)
 
 	// The route was defined as /kittens/{id}. This is how you pull the
-	// ID. I'm considering making a convenience method on TiltController that
+	// ID. I'm considering making a convenience method on Controller that
 	// combines the above call with this call.
 	id, _ := rctx.RouteVar("id")
 
@@ -110,7 +110,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	})
 }
 
-func registerKittens(c *api_framework.TiltController) (err error) {
+func registerKittens(c *api_framework.Controller) (err error) {
 	kittens := &KittensController{c}
 	c.POST("/kittens", kittens.AddKitten,
 		// Optional arguments. If you're using the json schema middleware,
@@ -132,7 +132,7 @@ func registerKittens(c *api_framework.TiltController) (err error) {
 func main() {
 	port := 31337
 
-	controller_opts := api_framework.NewTiltControllerOpts()
+	controller_opts := api_framework.NewControllerOpts()
 	// BaseAPIURL is used to specify the real externally reachable URL. This
 	// is used for returning paths to json schemas via the Link: header
 	controller_opts.BaseAPIURL = fmt.Sprintf("http://localhost:%d", port)
@@ -143,7 +143,7 @@ func main() {
 	// If set, where output for apache-style logging goes
 	controller_opts.ApacheLogWriter = os.Stderr
 
-	controller := api_framework.NewTiltController(controller_opts)
+	controller := api_framework.NewController(controller_opts)
 
 	if err := controller.Init(); err != nil {
 		log.Fatal(err)

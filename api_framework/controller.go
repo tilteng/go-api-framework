@@ -26,7 +26,7 @@ type ErrorFormatter interface {
 	FormatErrors(errors.ErrorType) interface{}
 }
 
-type TiltControllerOpts struct {
+type ControllerOpts struct {
 	// Used only for Link: header responses for json schema
 	BaseAPIURL             string
 	BaseRouter             *api_router.Router
@@ -44,10 +44,10 @@ type TiltControllerOpts struct {
 	Logger                 logger.Logger
 }
 
-type TiltController struct {
+type Controller struct {
 	*api_router.Router
 	logger.Logger
-	options                *TiltControllerOpts
+	options                *ControllerOpts
 	JSONSchemaMiddleware   *jsonschema_mw.JSONSchemaMiddleware
 	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware
 	SerializerMiddleware   *serializers_mw.SerializerMiddleware
@@ -56,11 +56,11 @@ type TiltController struct {
 	ErrorFormatter         ErrorFormatter
 }
 
-func (self *TiltController) ReadBody(ctx context.Context, v interface{}) error {
+func (self *Controller) ReadBody(ctx context.Context, v interface{}) error {
 	return serializers_mw.DeserializedBody(ctx, v)
 }
 
-func (self *TiltController) WriteResponse(ctx context.Context, v interface{}) error {
+func (self *Controller) WriteResponse(ctx context.Context, v interface{}) error {
 	if tilterr, ok := v.(errors.ErrorType); ok {
 		rctx := api_router.RequestContextFromContext(ctx)
 		status := tilterr.GetStatus()
@@ -83,20 +83,20 @@ func (self *TiltController) WriteResponse(ctx context.Context, v interface{}) er
 	return serializers_mw.WriteSerializedResponse(ctx, v)
 }
 
-func (self *TiltController) GenUUID() *UUID {
+func (self *Controller) GenUUID() *UUID {
 	return GenUUID()
 }
 
-func (self *TiltController) GenUUIDHex() string {
+func (self *Controller) GenUUIDHex() string {
 	return GenUUIDHex()
 }
 
-func (self *TiltController) UUIDFromString(s string) *UUID {
+func (self *Controller) UUIDFromString(s string) *UUID {
 	return UUIDFromString(s)
 }
 
-func NewTiltControllerOpts() *TiltControllerOpts {
-	return &TiltControllerOpts{
+func NewControllerOpts() *ControllerOpts {
+	return &ControllerOpts{
 		BaseAPIURL:      "http://localhost/",
 		ConsumesContent: []string{"application/json"},
 		ProducesContent: []string{"application/json"},
@@ -104,6 +104,6 @@ func NewTiltControllerOpts() *TiltControllerOpts {
 	}
 }
 
-func NewTiltController(opts *TiltControllerOpts) *TiltController {
-	return &TiltController{options: opts}
+func NewController(opts *ControllerOpts) *Controller {
+	return &Controller{options: opts}
 }

@@ -13,12 +13,29 @@ import (
 )
 
 type JSONSchemaResult struct {
-	*gojsonschema.Result
+	errors []*JSONSchemaResultError
 }
+
+func (self *JSONSchemaResult) Errors() []*JSONSchemaResultError {
+	return self.errors
+}
+
+type JSONSchemaResultError struct {
+	internalError string
+	resultError   gojsonschema.ResultError
+}
+
+func (self *JSONSchemaResultError) String() string {
+	if self.internalError != "" {
+		return self.internalError
+	}
+	return self.resultError.String()
+}
+
 type ErrorHandler func(context.Context, *JSONSchemaResult) bool
 
-func (self ErrorHandler) Error(ctx context.Context, result *gojsonschema.Result) bool {
-	return self(ctx, &JSONSchemaResult{result})
+func (self ErrorHandler) Error(ctx context.Context, result *JSONSchemaResult) bool {
+	return self(ctx, result)
 }
 
 type JSONSchema struct {

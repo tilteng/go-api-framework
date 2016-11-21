@@ -17,28 +17,45 @@ type JSONSchemaWrapper struct {
 }
 
 func (self *JSONSchemaWrapper) validateBody(ctx context.Context, rctx *api_router.RequestContext, body []byte) bool {
+	our_result := &JSONSchemaResult{}
+
 	loader := gojsonschema.NewStringLoader(string(body))
-	result, err := self.schema.Validate(loader)
+	resp, err := self.schema.Validate(loader)
 	if err != nil {
-		panic(fmt.Sprintf("Error validating body: %s", err.Error()))
-	}
-	if !result.Valid() {
-		if self.errorHandler != nil {
-			return self.errorHandler.Error(ctx, result)
+		our_result.errors = []*JSONSchemaResultError{
+			&JSONSchemaResultError{
+				internalError: "Error validating body: " + err.Error(),
+			},
 		}
-		var str string
-		for _, desc := range result.Errors() {
-			if str != "" {
-				str += "," + desc.String()
-			} else {
-				str += desc.String()
+	} else if resp.Valid() {
+		return true
+	} else {
+		json_errors := resp.Errors()
+		our_result.errors = make(
+			[]*JSONSchemaResultError, len(json_errors), len(json_errors),
+		)
+		for i, result := range json_errors {
+			our_result.errors[i] = &JSONSchemaResultError{
+				resultError: result,
 			}
 		}
-		rctx.SetStatus(400)
-		rctx.WriteResponse(nil) // Force writing of status
-		panic(str)
 	}
-	return true
+
+	if self.errorHandler != nil {
+		return self.errorHandler.Error(ctx, our_result)
+	}
+
+	var str string
+	for i, result := range our_result.errors {
+		if i == 0 {
+			str += result.String()
+		} else {
+			str += "," + result.String()
+		}
+	}
+	rctx.SetStatus(400)
+	rctx.WriteResponse(nil) // Force writing of status
+	panic(str)
 }
 
 func (self *JSONSchemaWrapper) SetErrorHandler(error_handler ErrorHandler) *JSONSchemaWrapper {

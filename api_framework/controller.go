@@ -16,14 +16,14 @@ import (
 	"github.com/tilteng/go-metrics/metrics_mw"
 )
 
-type ErrorFormatterFn func(errors.Errors) interface{}
+type ErrorFormatterFn func(errors.ErrorType) interface{}
 
-func (self ErrorFormatterFn) FormatErrors(errs errors.Errors) interface{} {
-	return self(errs)
+func (self ErrorFormatterFn) FormatErrors(err errors.ErrorType) interface{} {
+	return self(err)
 }
 
 type ErrorFormatter interface {
-	FormatErrors(errors.Errors) interface{}
+	FormatErrors(errors.ErrorType) interface{}
 }
 
 type TiltControllerOpts struct {
@@ -61,38 +61,21 @@ func (self *TiltController) ReadBody(ctx context.Context, v interface{}) error {
 }
 
 func (self *TiltController) WriteResponse(ctx context.Context, v interface{}) error {
-	var errs_obj errors.Errors
-
-	if val, ok := v.(errors.Errors); ok {
-		errs_obj = val
-	} else if val, ok := v.([]*errors.Error); ok {
-		errs_obj = errors.Errors(val)
-	} else if val, ok := v.(*errors.Error); ok {
-		errs_obj = errors.Errors([]*errors.Error{val})
-	}
-
-	if errs_obj != nil {
+	if tilterr, ok := v.(errors.ErrorType); ok {
 		rctx := api_router.RequestContextFromContext(ctx)
-		rctx.SetStatus(errs_obj[0].Status)
+		status := tilterr.GetStatus()
+		rctx.SetStatus(status)
 
-		if errs_obj[0].Status >= 500 {
-			var json string
-			var json_err error
-
-			if len(errs_obj) == 1 {
-				json, json_err = errs_obj[0].AsJSON()
-			} else {
-				json, json_err = errs_obj.AsJSON()
-			}
-
+		if status >= 500 {
+			json, json_err := tilterr.AsJSON()
 			if json_err != nil {
-				self.Logger.Errorf("Returning exception: %+v", errs_obj)
+				self.Logger.Errorf("Returning exception: %+v", tilterr)
 			} else {
 				self.Logger.Error("Returning exception: " + json)
 			}
 		}
 
-		resp := self.ErrorFormatter.FormatErrors(errs_obj)
+		resp := self.ErrorFormatter.FormatErrors(tilterr)
 
 		return serializers_mw.WriteSerializedResponse(ctx, resp)
 	}

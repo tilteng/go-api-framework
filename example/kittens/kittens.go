@@ -91,7 +91,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	if uuid == nil {
 		self.WriteResponse(
 			ctx,
-			ErrInvalidKittenID.New(0),
+			ErrInvalidKittenID.New(),
 		)
 		return
 	}
@@ -99,7 +99,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	if !ok {
 		self.WriteResponse(
 			ctx,
-			ErrKittenNotFound.New(0),
+			ErrKittenNotFound.New(),
 		)
 		return
 	}

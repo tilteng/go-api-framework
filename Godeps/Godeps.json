@@ -27,7 +27,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-jsonschema/jsonschema_mw",
-			"Rev": "67ec159436edf7de8805ad73096adb31152436e9"
+			"Rev": "de374a6c6a00c4506730826b7ad572e0ef129386"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-panichandler/panichandler_mw",
@@ -43,7 +43,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",
-			"Rev": "9fc48aa22003c20d987ba758446f991ce8f2da4f"
+			"Rev": "cd5dabdb36dbc4de908ce8633f62a1169b5f630a"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/apache_logger_mw",

@@ -11,15 +11,16 @@ type ErrorClass struct {
 	Name        string `json:"name"`
 	Code        string `json:"code"`
 	Status      int    `json:"-"`
-	Message     string `json:"message"`
+	Title       string `json:"title"`
 	Description string `json:"description"`
 }
 
-func (self *ErrorClass) newError(forceFrames bool, skip int) *Error {
+func (self *ErrorClass) newError(details string, forceFrames bool, skip int) *Error {
 	err := &Error{
 		ErrorClass: *self,
 		ID:         Config.ErrIDGenerator.GenErrID(),
 		Status:     self.Status,
+		Details:    details,
 	}
 	if err.Status >= 500 || forceFrames {
 		err.StackTrace = GetStackTrace(1 + skip)
@@ -30,22 +31,14 @@ func (self *ErrorClass) newError(forceFrames bool, skip int) *Error {
 // Create an instance of an error
 // Create an instance of an error. Takes an optional argument to use to
 // set internal details
-func (self *ErrorClass) New(v ...interface{}) *Error {
-	err := self.newError(false, 1)
-	if v != nil && len(v) > 0 {
-		err.SetInternal(v[0])
-	}
-	return err
+func (self *ErrorClass) New(details string) *Error {
+	return self.newError(details, false, 1)
 }
 
-// Create an instance of an error, including a stacktrace. Takes an optional
-// argument to use to set internal details
-func (self *ErrorClass) NewWithStack(skip int, v ...interface{}) *Error {
-	err := self.newError(true, 1+skip)
-	if v != nil && len(v) > 0 {
-		err.SetInternal(v[0])
-	}
-	return err
+// Create an instance of an error, including a stacktrace. 'skip' is how
+// many stack frames to skip.
+func (self *ErrorClass) NewWithStack(details string, skip int) *Error {
+	return self.newError(details, true, 1+skip)
 }
 
 // Interface that both Error and Errors satisfies
@@ -59,19 +52,36 @@ type ErrorType interface {
 type Error struct {
 	ErrorClass `json:"class"`
 	// Default is ErrorClass.Status
-	Status          int         `json:"status"`
-	ID              string      `json:"id"`
-	Details         string      `json:"details"`
-	StackTrace      StackTrace  `json:"stack_trace"`
-	InternalError   string      `json:"internal_error"`
-	InternalDetails interface{} `json:"internal_details"`
+	Status           int                    `json:"status"`
+	ID               string                 `json:"id"`
+	Details          string                 `json:"details,omitempty"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+	StackTrace       StackTrace             `json:"stack_trace,omitempty"`
+	InternalError    string                 `json:"internal_error,omitempty"`
+	InternalDetails  interface{}            `json:"internal_details,omitempty"`
+	InternalMetadata map[string]interface{} `json:"internal_metadata,omitempty"`
 }
 
 func (self *Error) GetStatus() int {
 	return self.Status
 }
 
-func (self *Error) SetInternal(v interface{}) {
+func (self *Error) SetStatus(status int) *Error {
+	self.Status = status
+	return self
+}
+
+func (self *Error) SetStackTrace(st StackTrace) *Error {
+	self.StackTrace = st
+	return self
+}
+
+func (self *Error) SetMetadata(v map[string]interface{}) *Error {
+	self.Metadata = v
+	return self
+}
+
+func (self *Error) SetInternal(v interface{}) *Error {
 	self.InternalDetails = v
 	if s, ok := v.(fmt.Stringer); ok {
 		self.InternalError = s.String()
@@ -80,6 +90,12 @@ func (self *Error) SetInternal(v interface{}) {
 	} else if e, ok := v.(string); ok {
 		self.InternalError = e
 	}
+	return self
+}
+
+func (self *Error) SetInternalMetadata(v map[string]interface{}) *Error {
+	self.InternalMetadata = v
+	return self
 }
 
 func (self *Error) AsJSONAPIError() *JSONAPIError {
@@ -87,8 +103,9 @@ func (self *Error) AsJSONAPIError() *JSONAPIError {
 		ID:     self.ID,
 		Status: self.Status,
 		Code:   self.Code,
-		Title:  self.Message,
+		Title:  self.Title,
 		Detail: self.Details,
+		Meta:   self.Metadata,
 	}
 }
 

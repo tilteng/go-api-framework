@@ -31,7 +31,7 @@ func (self *Controller) handlePanic(ctx context.Context, v interface{}) {
 
 	err_obj, ok := v.(*errors.Error)
 	if !ok {
-		err_obj = ErrInternalServerError.New()
+		err_obj = ErrInternalServerError.New("")
 		err_obj.SetInternal(v)
 	}
 
@@ -65,7 +65,7 @@ func (self *Controller) handleJSONSchemaError(ctx context.Context, result *jsons
 	json_errors := result.Errors()
 	api_errors := make(errors.Errors, 0, len(json_errors))
 	for _, json_err := range json_errors {
-		err := ErrJSONSchemaValidationFailed.New()
+		err := ErrJSONSchemaValidationFailed.New("")
 		err.Details = json_err.String()
 		api_errors.AddError(err)
 	}

@@ -21,16 +21,16 @@ var kittens = map[string]*Kitten{}
 
 // ErrorClasses
 var ErrInvalidKittenID = &errors.ErrorClass{
-	Name:    "ErrInvalidKittenID",
-	Code:    "ERR_ID_INVALID_KITTEN_ID",
-	Status:  400,
-	Message: "Invalid kitten id specified",
+	Name:   "ErrInvalidKittenID",
+	Code:   "ERR_ID_INVALID_KITTEN_ID",
+	Status: 400,
+	Title:  "Invalid kitten id specified",
 }
 var ErrKittenNotFound = &errors.ErrorClass{
-	Name:    "ErrKittenNotFound",
-	Code:    "ERR_ID_KITTEN_NOT_FOUND",
-	Status:  404,
-	Message: "No kitten found with that id",
+	Name:   "ErrKittenNotFound",
+	Code:   "ERR_ID_KITTEN_NOT_FOUND",
+	Status: 404,
+	Title:  "No kitten found with that id",
 }
 
 // Used for deserializing POST data. jsonapi spec says you should use
@@ -88,7 +88,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	if uuid == nil {
 		rctx.WriteResponse(
 			ctx,
-			ErrInvalidKittenID.New(),
+			ErrInvalidKittenID.New("kitten id should be a uuid4 string"),
 		)
 		return
 	}
@@ -96,7 +96,9 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	if !ok {
 		rctx.WriteResponse(
 			ctx,
-			ErrKittenNotFound.New(),
+			ErrKittenNotFound.New(
+				"kitten id '"+uuid.String()+"' does not exist",
+			),
 		)
 		return
 	}

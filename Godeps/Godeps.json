@@ -43,7 +43,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",
-			"Rev": "4a69f4d959ee603c392f6e98706ad7c77d8df9aa"
+			"Rev": "59079780eb82ca6ff9f78d0f8f0be84059aeb092"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/apache_logger_mw",

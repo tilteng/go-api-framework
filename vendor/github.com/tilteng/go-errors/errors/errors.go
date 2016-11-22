@@ -8,11 +8,17 @@ import (
 
 // Error class used to define errors
 type ErrorClass struct {
-	Name        string `json:"name"`
-	Code        string `json:"code"`
-	Status      int    `json:"-"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	// Name of the error class
+	Name string `json:"name"`
+	// ERR_ID* code
+	Code string `json:"code"`
+	// Default HTTP status code for this error
+	Status int `json:"-"`
+	// Title of error that shouldn't change between ocurrences
+	Title string `json:"title"`
+	// Code shouldn't really use this. It's just to provide a description
+	// to help developers.
+	Description string `json:"-"`
 }
 
 func (self *ErrorClass) newError(details string, forceFrames bool, skip int) *Error {

@@ -27,6 +27,7 @@ func (defaultErrIDGenerator) GenErrID() string {
 	)
 }
 
+var RegisteredErrors = make(map[string]*ErrorClass)
 var Config *config
 
 func init() {

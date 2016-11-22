@@ -20,18 +20,18 @@ type KittensController struct {
 var kittens = map[string]*Kitten{}
 
 // ErrorClasses
-var ErrInvalidKittenID = &errors.ErrorClass{
-	Name:   "ErrInvalidKittenID",
-	Code:   "ERR_ID_INVALID_KITTEN_ID",
-	Status: 400,
-	Title:  "Invalid kitten id specified",
-}
-var ErrKittenNotFound = &errors.ErrorClass{
-	Name:   "ErrKittenNotFound",
-	Code:   "ERR_ID_KITTEN_NOT_FOUND",
-	Status: 404,
-	Title:  "No kitten found with that id",
-}
+var ErrInvalidKittenID = errors.NewErrorClass(
+	"ErrInvalidKittenID",
+	"ERR_ID_INVALID_KITTEN_ID",
+	400,
+	"Invalid kitten id specified",
+)
+var ErrKittenNotFound = errors.NewErrorClass(
+	"ErrKittenNotFound",
+	"ERR_ID_KITTEN_NOT_FOUND",
+	404,
+	"No kitten found with that id",
+)
 
 // Used for deserializing POST data. jsonapi spec says you should use
 // { "data": { "attributes": { ... } } }

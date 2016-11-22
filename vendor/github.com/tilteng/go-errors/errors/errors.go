@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
+	"strings"
 )
 
 // Error class used to define errors
@@ -16,9 +17,6 @@ type ErrorClass struct {
 	Status int `json:"-"`
 	// Title of error that shouldn't change between ocurrences
 	Title string `json:"title"`
-	// Code shouldn't really use this. It's just to provide a description
-	// to help developers.
-	Description string `json:"-"`
 }
 
 func (self *ErrorClass) newError(details string, forceFrames bool, skip int) *Error {
@@ -175,6 +173,48 @@ type StackFrame struct {
 	Function string `json:"function"`
 	Filename string `json:"filename"`
 	LineNo   int    `json:"lineno"`
+}
+
+func NewErrorClass(name string, code string, status int, title string) *ErrorClass {
+	pc, file, line, ok := runtime.Caller(1)
+	if !ok {
+		panic(fmt.Sprintf(
+			"Couldn't determine caller defining error '%s'",
+			name,
+		))
+	}
+	if fn := runtime.FuncForPC(pc); fn != nil && len(fn.Name()) > 0 {
+		fname := fn.Name()
+		rindex := strings.LastIndex(fname, ".")
+		if rindex == -1 {
+			rindex = 0
+		}
+		if rindex > 0 {
+			fullname := fname[:rindex] + "." + name
+			if _, ok := RegisteredErrors[fullname]; ok {
+				panic(fmt.Sprintf(
+					"%s:%d: Error '%s' has already been defined",
+					file,
+					line,
+					fullname,
+				))
+			}
+			errcls := &ErrorClass{
+				Name:   fullname,
+				Code:   code,
+				Status: status,
+				Title:  title,
+			}
+			RegisteredErrors[fullname] = errcls
+			return errcls
+		}
+	}
+	panic(fmt.Sprintf(
+		"%s:%d: Couldn't determine package for error '%s'",
+		file,
+		line,
+		name,
+	))
 }
 
 func NewErrors() Errors {

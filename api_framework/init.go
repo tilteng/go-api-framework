@@ -110,13 +110,12 @@ func (self *Controller) Init() error {
 		self.Logger = self.options.Logger
 	}
 
-	self.Router.SetNewRouteNotifier(self.wrapNewRoute)
-
 	if self.options.BaseRouter == nil {
 		self.options.BaseRouter = api_router.NewMuxRouter()
 	}
 
 	self.Router = self.options.BaseRouter
+	self.Router.SetNewRouteNotifier(self.wrapNewRoute)
 
 	if mcli := self.options.MetricsClient; mcli != nil && self.MetricsMiddleware == nil {
 		self.MetricsMiddleware = metrics_mw.NewMiddleware(mcli)

@@ -6,7 +6,6 @@ import (
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/tilteng/go-api-serializers/serializers_mw"
 	"github.com/tilteng/go-errors/errors"
-	"github.com/tilteng/go-logger/logger"
 )
 
 type contextKey struct {
@@ -19,7 +18,7 @@ func (self *contextKey) String() string {
 
 type RequestContext struct {
 	*api_router.RequestContext
-	logger.Logger
+	appContext
 	controller               *Controller
 	serializerRequestContext serializers_mw.RequestContext
 }
@@ -31,7 +30,7 @@ func (self *Controller) newRequestContextFromContext(ctx context.Context) *Reque
 	ser_rctx := serializers_mw.RequestContextFromContext(ctx)
 	return &RequestContext{
 		RequestContext:           rctx,
-		Logger:                   self.Logger,
+		appContext:               self.appContext,
 		controller:               self,
 		serializerRequestContext: ser_rctx,
 	}

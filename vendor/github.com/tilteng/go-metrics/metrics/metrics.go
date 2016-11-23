@@ -18,9 +18,6 @@ type MetricsClient interface {
 	TimingMS(name string, value float64, rate float64, tags map[string]string) error
 }
 
-func NewMetricsClient(addr string) MetricsClient {
-	if len(addr) == 0 {
-		addr = "172.0.0.1:8125"
-	}
+func NewMetricsClient(addr string) (MetricsClient, error) {
 	return NewDDClient(addr)
 }

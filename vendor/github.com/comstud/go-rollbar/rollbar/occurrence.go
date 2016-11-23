@@ -30,7 +30,7 @@ type OccurrenceData struct {
 	Level       string             `json:"level"`
 	Notifier    OccurrenceNotifier `json:"notifier"`
 	Context     string             `json:"context"`
-	Title       string             `json"title"`
+	Title       string             `json:"title"`
 	Body        OccurrenceBody     `json:"body"`
 	Metadata    OccurrenceMetadata `json:"metadata"`
 	Framework   string             `json:"framework"`
@@ -41,7 +41,7 @@ type OccurrenceData struct {
 type Occurrence struct {
 	ID         uint64         `json:"id"`
 	Project_id uint64         `json:"project_id"`
-	Timestamp  JSONTime       `json"timestamp"`
+	Timestamp  JSONTime       `json:"timestamp"`
 	Version    uint           `json:"version"`
 	Data       OccurrenceData `json:"data"`
 	Billable   uint           `json:"billable"`

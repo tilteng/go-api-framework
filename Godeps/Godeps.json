@@ -18,7 +18,7 @@
 		},
 		{
 			"ImportPath": "github.com/comstud/go-rollbar/rollbar",
-			"Rev": "26cf59d034f13e9a25d76ab70fd2786abdf45fef"
+			"Rev": "16472eccf4c1aae3eb178371173a2396ac46ffe4"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
@@ -57,7 +57,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-app-context/app_context",
-			"Rev": "5548b07ef1cd9e790a7fcda151a1a426cab26ac7"
+			"Rev": "9f1e5b2e9054bcc26aed15c7c08703dd7a41fbf9"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",

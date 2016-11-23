@@ -30,6 +30,16 @@ type MetricsWrapper struct {
 	timingName string
 }
 
+func (self *MetricsWrapper) formatValue(s string) string {
+	bytes := []byte(s)
+	for i, byt := range bytes {
+		if byt == '{' || byt == '}' {
+			bytes[i] = ':'
+		}
+	}
+	return string(bytes)
+}
+
 func (self *MetricsWrapper) sendMetrics(ctx context.Context, then, now time.Time) {
 	// Catch and ignore any errors
 	defer func() {
@@ -46,7 +56,7 @@ func (self *MetricsWrapper) sendMetrics(ctx context.Context, then, now time.Time
 		now.Sub(then),
 		1,
 		map[string]string{
-			"route":  cur_route.Path(),
+			"route":  self.formatValue(cur_route.Path()),
 			"path":   http_req.URL.String(),
 			"method": http_req.Method,
 			"status": fmt.Sprintf("%d", writer.Status()),

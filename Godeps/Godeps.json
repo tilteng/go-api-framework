@@ -18,7 +18,7 @@
 		},
 		{
 			"ImportPath": "github.com/comstud/go-rollbar/rollbar",
-			"Rev": "e9a279c398de84b1e35406fc31814ed4b626b493"
+			"Rev": "4b5e873aca28832de8708edd178a15fab5eeff6e"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
@@ -59,11 +59,11 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics",
-			"Rev": "baa000d58647c63ddc31f9760a19015ad10408d1"
+			"Rev": "e10dfe61e7af517ecad34e7a6a550b7d89cd4bee"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics_mw",
-			"Rev": "baa000d58647c63ddc31f9760a19015ad10408d1"
+			"Rev": "e10dfe61e7af517ecad34e7a6a550b7d89cd4bee"
 		},
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonpointer",

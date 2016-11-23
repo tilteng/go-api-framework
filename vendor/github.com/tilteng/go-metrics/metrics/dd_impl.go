@@ -19,6 +19,10 @@ type ddClient struct {
 	numBufferedCommands int
 }
 
+func (self *ddClient) GetAddr() string {
+	return self.addr
+}
+
 func (self *ddClient) GetNamespace() string {
 	return self.namespace
 }
@@ -105,6 +109,10 @@ func (self *ddClient) TimingMS(name string, value float64, rate float64, tags ma
 }
 
 func NewDDClient(addr string) (*ddClient, error) {
+	if !strings.Contains(addr, "://") {
+		addr = "udp://" + addr
+	}
+
 	url, err := url.Parse(addr)
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't parse client address: %s", err)
@@ -119,7 +127,7 @@ func NewDDClient(addr string) (*ddClient, error) {
 	addr = url.Host
 
 	if len(addr) == 0 {
-		addr = "172.0.0.1:8125"
+		addr = "127.0.0.1:8125"
 	} else if !strings.Contains(addr, ":") {
 		addr += ":8125"
 	}

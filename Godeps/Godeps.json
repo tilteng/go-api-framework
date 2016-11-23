@@ -57,7 +57,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-app-context/app_context",
-			"Rev": "9f1e5b2e9054bcc26aed15c7c08703dd7a41fbf9"
+			"Rev": "0e5ef22dc637671acf708a1dceacc04138b1b68d"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",
@@ -73,11 +73,11 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics",
-			"Rev": "167ce577bce2893b6056ef879454978f241551b4"
+			"Rev": "16b1a88aa53236ec2de47aaaf4a3e1d4876e801a"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics_mw",
-			"Rev": "167ce577bce2893b6056ef879454978f241551b4"
+			"Rev": "16b1a88aa53236ec2de47aaaf4a3e1d4876e801a"
 		},
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonpointer",

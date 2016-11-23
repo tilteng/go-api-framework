@@ -11,6 +11,10 @@ type noopClient struct {
 	namespace string
 }
 
+func (self *noopClient) GetAddr() string {
+	return ""
+}
+
 func (self *noopClient) GetNamespace() string {
 	return self.namespace
 }

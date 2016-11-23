@@ -3,6 +3,7 @@ package metrics
 import "time"
 
 type MetricsClient interface {
+	GetAddr() string
 	GetNamespace() string
 	SetNamespace(string)
 	GetTags() map[string]string

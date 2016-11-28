@@ -11,6 +11,7 @@ import (
 	"github.com/tilteng/go-app-context/app_context"
 	"github.com/tilteng/go-logger/apache_logger_mw"
 	"github.com/tilteng/go-metrics/metrics_mw"
+	"github.com/tilteng/go-request-tracing/request_tracing"
 )
 
 func (self *Controller) setupSchemaRoutes() error {
@@ -62,6 +63,8 @@ func (self *Controller) setupSchemaRoutes() error {
 // responses. And json schema validation should just happen right
 // before we call the real route handler.
 func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) {
+	ctx := context.TODO()
+
 	orig_fn := rt.RouteFn()
 
 	// Create our Request right before calling middleware
@@ -72,7 +75,7 @@ func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) 
 	// Wrap with our request last
 
 	if js_mw := self.JSONSchemaMiddleware; js_mw != nil {
-		if wrapper := js_mw.NewWrapperFromRouteOptions(opts...); wrapper != nil {
+		if wrapper := js_mw.NewWrapperFromRouteOptions(ctx, opts...); wrapper != nil {
 			fn = wrapper.Wrap(fn)
 		}
 	}
@@ -93,20 +96,36 @@ func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) 
 		fn = metrics_mw.NewWrapper().Wrap(fn)
 	}
 
-	rt.SetRouteFn(fn)
+	// Set up request IDs first.
 
-	self.LogDebug("Registered route:", rt.Method(), rt.FullPath())
+	top_fn := func(ctx context.Context) {
+		rt := self.requestTraceManager.NewRequestTraceFromHTTPRequest(
+			self.Router.RequestContext(ctx).HTTPRequest(),
+		)
+		fn(self.requestTraceManager.ContextWithRequestTrace(ctx, rt))
+	}
+
+	rt.SetRouteFn(top_fn)
+
+	self.logger.LogDebug(ctx, "Registered route:", rt.Method(), rt.FullPath())
 }
 
 // Final initialization that should be called before registering routes.
 // If you wish to modify any defaults on Controller, you should do this
 // before calling Init()
-func (self *Controller) Init() error {
+func (self *Controller) Init(ctx context.Context) error {
 	if self.options.AppContext == nil {
 		panic("ControllerOpts must not contain a nil AppContext")
 	}
 
 	self.appContext = self.options.AppContext
+	self.logger = self.appContext.Logger()
+
+	// Set this early, as we're going to use it to set up our logger
+	self.requestTraceManager = self.options.RequestTraceManager
+	if self.requestTraceManager == nil {
+		self.requestTraceManager = request_tracing.NewRequestTraceManager().SetBaseLogger(self.logger.BaseLogger())
+	}
 
 	if self.options.BaseRouter == nil {
 		self.options.BaseRouter = api_router.NewMuxRouter()
@@ -136,7 +155,7 @@ func (self *Controller) Init() error {
 			route_prefix,
 		).SetLogger(self.Logger())
 
-		err := js_mw.LoadFromPath(self.options.JSONSchemaFilePath)
+		err := js_mw.LoadFromPath(ctx, self.options.JSONSchemaFilePath)
 		if err != nil {
 			return err
 		}

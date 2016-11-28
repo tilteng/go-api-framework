@@ -13,22 +13,20 @@ import (
 	"github.com/tilteng/go-metrics/metrics"
 )
 
-type ctxlogger logger.Logger
-
 type AppContext interface {
-	ctxlogger
 	AppName() string
 	Hostname() string
-	Logger() logger.Logger
+	Logger() logger.CtxLogger
 	RollbarClient() rollbar.Client
 	RollbarEnabled() bool
 	MetricsClient() metrics.MetricsClient
 	MetricsEnabled() bool
 	DB() *sql.DB
+	SetLogger(logger.CtxLogger) AppContext
 }
 
 type baseAppContext struct {
-	ctxlogger
+	logger         logger.CtxLogger
 	appName        string
 	hostname       string
 	rollbarClient  rollbar.Client
@@ -42,8 +40,8 @@ func (self *baseAppContext) DB() *sql.DB {
 	return self.db
 }
 
-func (self *baseAppContext) Logger() logger.Logger {
-	return self.ctxlogger
+func (self *baseAppContext) Logger() logger.CtxLogger {
+	return self.logger
 }
 
 func (self *baseAppContext) RollbarClient() rollbar.Client {
@@ -68,6 +66,11 @@ func (self *baseAppContext) RollbarEnabled() bool {
 
 func (self *baseAppContext) MetricsEnabled() bool {
 	return self.metricsEnabled
+}
+
+func (self *baseAppContext) SetLogger(logger logger.CtxLogger) AppContext {
+	self.logger = logger
+	return self
 }
 
 func (self *baseAppContext) isDisabled(s string) (bool, error) {
@@ -177,10 +180,7 @@ func (self *baseAppContext) setDBFromEnv() error {
 
 func NewAppContext(app_name string) (AppContext, error) {
 	appctx := &baseAppContext{
-		ctxlogger: logger.NewDefaultLogger(
-			os.Stdout,
-			"",
-		),
+		logger:         logger.DefaultStdoutCtxLogger(),
 		appName:        app_name,
 		rollbarEnabled: false,
 		rollbarClient:  rollbar.NewNOOPClient(),

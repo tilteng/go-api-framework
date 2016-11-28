@@ -41,7 +41,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-jsonschema/jsonschema_mw",
-			"Rev": "5b91ee07f0be8faa5660b281edf01b72e9379bdb"
+			"Rev": "f6e919d619c1db5868a49dd6a7b99a3d19cfe3d6"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-panichandler/panichandler_mw",
@@ -57,7 +57,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-app-context/app_context",
-			"Rev": "0e5ef22dc637671acf708a1dceacc04138b1b68d"
+			"Rev": "4dad1a49c9b09da3d7c5b34b692c7254fc58295f"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",
@@ -65,11 +65,11 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/apache_logger_mw",
-			"Rev": "004f2736100f2f84551d0d710594deef167ed6f4"
+			"Rev": "72cf7202baa7a53b73bb5d287e00e88c2cb3cc18"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-logger/logger",
-			"Rev": "004f2736100f2f84551d0d710594deef167ed6f4"
+			"Rev": "72cf7202baa7a53b73bb5d287e00e88c2cb3cc18"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics",
@@ -78,6 +78,10 @@
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics_mw",
 			"Rev": "16b1a88aa53236ec2de47aaaf4a3e1d4876e801a"
+		},
+		{
+			"ImportPath": "github.com/tilteng/go-request-tracing/request_tracing",
+			"Rev": "ea55c85f2763ae0cd607c0a0a55b9138c8fd1f80"
 		},
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonpointer",

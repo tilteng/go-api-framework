@@ -10,6 +10,7 @@ import (
 	"github.com/tilteng/go-api-framework/api_framework"
 	"github.com/tilteng/go-app-context/app_context"
 	"github.com/tilteng/go-errors/errors"
+	"github.com/tilteng/go-request-tracing/request_tracing"
 )
 
 // Our controller! It embeds a Controller.
@@ -51,6 +52,8 @@ type Kitten struct {
 }
 
 func (self *KittensController) AddKitten(ctx context.Context) {
+	rctx := self.RequestContext(ctx)
+
 	body_obj := &createKittenBody{}
 	// ReadBody() is a method on the Controller struct. It handles
 	// deserializing the body into whatever object you pass. If you're
@@ -64,6 +67,8 @@ func (self *KittensController) AddKitten(ctx context.Context) {
 		panic("uuid generation failed")
 	}
 	kittens[kitten.Id.String()] = kitten
+
+	rctx.LogInfof("Created kitten with ID %s", kitten.Id)
 
 	// WriteResponse() is a method on the Controller struct. It handles
 	// serializing your data according to Accept: header and returing the
@@ -136,6 +141,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Use AppContext's logger to set up a logger that logs request
+	// IDs. Then update AppContext's logger.
+	requestTraceManager := request_tracing.NewRequestTraceManager()
+	requestTraceManager.SetBaseLogger(app_context.Logger().BaseLogger())
+	logger := requestTraceManager.Logger()
+	app_context.SetLogger(logger)
+
 	controller_opts := api_framework.NewControllerOpts(app_context)
 	// BaseAPIURL is used to specify the real externally reachable URL. This
 	// is used for returning paths to json schemas via the Link: header
@@ -149,16 +161,26 @@ func main() {
 
 	controller := api_framework.NewController(controller_opts)
 
-	if err := controller.Init(); err != nil {
-		log.Fatal(err)
+	// Need a context to start
+	ctx := context.Background()
+
+	if err := controller.Init(ctx); err != nil {
+		logger.LogError(ctx, err)
+		panic(err)
 	}
 
 	if err := registerKittens(controller); err != nil {
-		log.Fatal(err)
+		logger.LogError(ctx, err)
+		panic(err)
 	}
 
-	log.Fatal(http.ListenAndServe(
+	logger.LogInfo(ctx, fmt.Sprintf("Server started on port %d", port))
+
+	err = http.ListenAndServe(
 		fmt.Sprintf(":%d", port),
 		controller,
-	))
+	)
+
+	logger.LogError(ctx, err)
+	panic(err)
 }

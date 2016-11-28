@@ -25,7 +25,8 @@ func (self *Controller) handlePanic(ctx context.Context, v interface{}) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			self.LogErrorf(
+			self.logger.LogErrorf(
+				rctx,
 				"Received panic while processing another panic: %+v",
 				r,
 			)

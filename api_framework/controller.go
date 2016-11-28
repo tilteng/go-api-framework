@@ -11,7 +11,9 @@ import (
 	"github.com/tilteng/go-app-context/app_context"
 	"github.com/tilteng/go-errors/errors"
 	"github.com/tilteng/go-logger/apache_logger_mw"
+	"github.com/tilteng/go-logger/logger"
 	"github.com/tilteng/go-metrics/metrics_mw"
+	"github.com/tilteng/go-request-tracing/request_tracing"
 )
 
 type appContext app_context.AppContext
@@ -40,6 +42,7 @@ type ControllerOpts struct {
 	ApacheLogWriter        io.Writer
 	ApacheLogCombined      bool
 	ErrorFormatter         ErrorFormatter
+	RequestTraceManager    request_tracing.RequestTraceManager
 
 	// We pull metrics, rollbar, and logger from AppContext
 	AppContext app_context.AppContext
@@ -48,8 +51,10 @@ type ControllerOpts struct {
 type Controller struct {
 	*api_router.Router
 	appContext
+	logger                 logger.CtxLogger
 	options                *ControllerOpts
 	errorFormatter         ErrorFormatter
+	requestTraceManager    request_tracing.RequestTraceManager
 	JSONSchemaMiddleware   *jsonschema_mw.JSONSchemaMiddleware
 	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware
 	SerializerMiddleware   *serializers_mw.SerializerMiddleware
@@ -83,9 +88,9 @@ func (self *Controller) WriteResponse(ctx context.Context, v interface{}) error 
 		if status >= 500 {
 			json, json_err := tilterr.AsJSON()
 			if json_err != nil {
-				self.LogErrorf("Returning exception: %+v", tilterr)
+				self.logger.LogErrorf(ctx, "Returning exception: %+v", tilterr)
 			} else {
-				self.LogError("Returning exception: " + json)
+				self.logger.LogError(ctx, "Returning exception: "+json)
 			}
 		}
 

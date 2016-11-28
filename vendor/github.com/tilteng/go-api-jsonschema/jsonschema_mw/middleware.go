@@ -53,7 +53,7 @@ func (self *JSONSchema) GetJSONString() string {
 
 type JSONSchemaMiddleware struct {
 	jsonSchemas    map[string]*JSONSchema
-	logger         logger.Logger
+	logger         logger.CtxLogger
 	errorHandler   ErrorHandler
 	linkPathPrefix string
 }
@@ -67,7 +67,7 @@ func (self *JSONSchemaMiddleware) GetSchemas() map[string]*JSONSchema {
 	return self.jsonSchemas
 }
 
-func (self *JSONSchemaMiddleware) LoadFromPath(base_path string) error {
+func (self *JSONSchemaMiddleware) LoadFromPath(ctx context.Context, base_path string) error {
 	return filepath.Walk(base_path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -101,7 +101,7 @@ func (self *JSONSchemaMiddleware) LoadFromPath(base_path string) error {
 		}
 
 		if self.logger != nil {
-			self.logger.LogDebugf("Loaded schema %s", name)
+			self.logger.LogDebug(ctx, "Loaded schema "+name)
 		}
 
 		return nil
@@ -121,7 +121,7 @@ func (self *JSONSchemaMiddleware) NewWrapper(schema *gojsonschema.Schema, linkpa
 	}
 }
 
-func (self *JSONSchemaMiddleware) NewWrapperFromSchemaName(name string) *JSONSchemaWrapper {
+func (self *JSONSchemaMiddleware) NewWrapperFromSchemaName(ctx context.Context, name string) *JSONSchemaWrapper {
 	schema := self.GetSchema(name)
 	if schema == nil {
 		panic(fmt.Errorf("Couldn't find json schema with name '%s'", name))
@@ -129,7 +129,7 @@ func (self *JSONSchemaMiddleware) NewWrapperFromSchemaName(name string) *JSONSch
 	return self.NewWrapper(schema.GetSchema(), name)
 }
 
-func (self *JSONSchemaMiddleware) NewWrapperFromRouteOptions(opts ...interface{}) *JSONSchemaWrapper {
+func (self *JSONSchemaMiddleware) NewWrapperFromRouteOptions(ctx context.Context, opts ...interface{}) *JSONSchemaWrapper {
 	var schema_name string
 	for _, opt_map_i := range opts {
 		opt_map, ok := opt_map_i.(map[string]string)
@@ -140,14 +140,12 @@ func (self *JSONSchemaMiddleware) NewWrapperFromRouteOptions(opts ...interface{}
 		if !ok {
 			continue
 		}
-		return self.NewWrapperFromSchemaName(
-			schema_name,
-		)
+		return self.NewWrapperFromSchemaName(ctx, schema_name)
 	}
 	return nil
 }
 
-func (self *JSONSchemaMiddleware) SetLogger(logger logger.Logger) *JSONSchemaMiddleware {
+func (self *JSONSchemaMiddleware) SetLogger(logger logger.CtxLogger) *JSONSchemaMiddleware {
 	self.logger = logger
 	return self
 }

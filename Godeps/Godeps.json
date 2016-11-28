@@ -41,7 +41,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-jsonschema/jsonschema_mw",
-			"Rev": "f6e919d619c1db5868a49dd6a7b99a3d19cfe3d6"
+			"Rev": "15a7395e1c51b0f6d4d1e5ccc5d6477bfb0047fe"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-panichandler/panichandler_mw",

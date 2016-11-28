@@ -16,6 +16,10 @@ type JSONSchemaResult struct {
 	errors []*JSONSchemaResultError
 }
 
+type JSONSchemaOpts struct {
+	Name string
+}
+
 func (self *JSONSchemaResult) Errors() []*JSONSchemaResultError {
 	return self.errors
 }
@@ -130,17 +134,15 @@ func (self *JSONSchemaMiddleware) NewWrapperFromSchemaName(ctx context.Context, 
 }
 
 func (self *JSONSchemaMiddleware) NewWrapperFromRouteOptions(ctx context.Context, opts ...interface{}) *JSONSchemaWrapper {
-	var schema_name string
 	for _, opt_map_i := range opts {
-		opt_map, ok := opt_map_i.(map[string]string)
+		opt, ok := opt_map_i.(*JSONSchemaOpts)
 		if !ok {
 			continue
 		}
-		schema_name, ok = opt_map["jsonschema"]
-		if !ok {
+		if len(opt.Name) == 0 {
 			continue
 		}
-		return self.NewWrapperFromSchemaName(ctx, schema_name)
+		return self.NewWrapperFromSchemaName(ctx, opt.Name)
 	}
 	return nil
 }

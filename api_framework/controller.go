@@ -74,6 +74,10 @@ func (self *Controller) UUIDFromString(s string) *UUID {
 	return UUIDFromString(s)
 }
 
+func (self *Controller) JSONSchemaOpts(name string) *jsonschema_mw.JSONSchemaOpts {
+	return &jsonschema_mw.JSONSchemaOpts{Name: name}
+}
+
 func (self *Controller) ReadBody(ctx context.Context, v interface{}) error {
 	rctx := self.RequestContext(ctx)
 	return rctx.serializerRequestContext.ReadDeserializedBody(rctx, v)

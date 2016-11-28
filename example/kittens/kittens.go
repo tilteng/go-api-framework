@@ -117,12 +117,12 @@ func registerKittens(c *api_framework.Controller) (err error) {
 	kittens := &KittensController{c}
 	c.POST("/kittens", kittens.AddKitten,
 		// Optional arguments. If you're using the json schema middleware,
-		// it will look for a map[string]string argument containing a key
-		// of "jsonschema". The value should be the name of a file under
-		// the JSONSchemaFilePath (see controller_opts) excluding its
+		// it will look for a *JSONSchemaOpts struct with Name set to
+		// something other than "". `Name` should be the name of a file
+		// under the JSONSchemaFilePath (see controller_opts) excluding its
 		// .json suffix. When this route is called, the body of data will
 		// be validated against the schema found in the json file.
-		map[string]string{"jsonschema": "create-kitten"},
+		c.JSONSchemaOpts("create-kitten"),
 	)
 	// For more efficient routing, you can create a sub-path
 	kittens_router := c.SubRouterForPath("/kittens")

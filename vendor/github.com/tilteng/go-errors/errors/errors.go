@@ -7,8 +7,93 @@ import (
 	"strings"
 )
 
+// Error ID generator type
+type ErrIDGenerator interface {
+	GenErrID() string
+}
+
+// Turn a single generator function into something that satisfies
+// the ErrIDGenerator interface
+type ErrIDGeneratorFn func() string
+
+func (self ErrIDGeneratorFn) GenErrID() string {
+	return self()
+}
+
+type ErrorManager struct {
+	errorClasses   map[string]*ErrorClass
+	errIDGenerator ErrIDGenerator
+}
+
+func (self *ErrorManager) ErrorClasses() []ErrorClass {
+	classes := make([]ErrorClass, 0, len(self.errorClasses))
+	for _, class := range self.errorClasses {
+		classes = append(classes, *class)
+	}
+	return classes
+}
+
+func (self *ErrorManager) SetErrIDGenerator(generator ErrIDGenerator) *ErrorManager {
+	self.errIDGenerator = generator
+	return self
+}
+
+func (self *ErrorManager) NewClass(name string, code string, status int, title string) *ErrorClass {
+	pc, file, line, ok := runtime.Caller(1)
+	if !ok {
+		panic(fmt.Sprintf(
+			"Couldn't determine caller defining error '%s'",
+			name,
+		))
+	}
+	if fn := runtime.FuncForPC(pc); fn != nil && len(fn.Name()) > 0 {
+		fname := fn.Name()
+		rindex := strings.LastIndex(fname, ".")
+		if rindex == -1 {
+			rindex = 0
+		}
+		if rindex > 0 {
+			fullname := fname[:rindex] + "." + name
+			if existing, ok := self.errorClasses[fullname]; ok {
+				panic(fmt.Sprintf(
+					"%s:%d: Error '%s' was already defined at %s:%d",
+					file,
+					line,
+					fullname,
+					existing.sourceFile,
+					existing.sourceLine,
+				))
+			}
+			errcls := &ErrorClass{
+				errorManager: self,
+				sourceFile:   file,
+				sourceLine:   line,
+				Name:         fullname,
+				Code:         code,
+				Status:       status,
+				Title:        title,
+			}
+			self.errorClasses[fullname] = errcls
+			return errcls
+		}
+	}
+	panic(fmt.Sprintf(
+		"%s:%d: Couldn't determine package for error '%s'",
+		file,
+		line,
+		name,
+	))
+}
+
 // Error class used to define errors
 type ErrorClass struct {
+	// Pointer back to ErrorManager
+	errorManager *ErrorManager
+	// Filename where the error class was defined
+	sourceFile string
+	// Line number where the error class was defined
+	sourceLine int
+
 	// Name of the error class
 	Name string `json:"name"`
 	// ERR_ID* code
@@ -22,7 +107,7 @@ type ErrorClass struct {
 func (self *ErrorClass) newError(details string, forceFrames bool, skip int) *Error {
 	err := &Error{
 		ErrorClass: *self,
-		ID:         Config.ErrIDGenerator.GenErrID(),
+		ID:         self.errorManager.errIDGenerator.GenErrID(),
 		Status:     self.Status,
 		Details:    details,
 	}
@@ -175,46 +260,11 @@ type StackFrame struct {
 	LineNo   int    `json:"lineno"`
 }
 
-func NewErrorClass(name string, code string, status int, title string) *ErrorClass {
-	pc, file, line, ok := runtime.Caller(1)
-	if !ok {
-		panic(fmt.Sprintf(
-			"Couldn't determine caller defining error '%s'",
-			name,
-		))
+func NewErrorManager() *ErrorManager {
+	return &ErrorManager{
+		errorClasses:   make(map[string]*ErrorClass),
+		errIDGenerator: defaultErrorIDGenerator,
 	}
-	if fn := runtime.FuncForPC(pc); fn != nil && len(fn.Name()) > 0 {
-		fname := fn.Name()
-		rindex := strings.LastIndex(fname, ".")
-		if rindex == -1 {
-			rindex = 0
-		}
-		if rindex > 0 {
-			fullname := fname[:rindex] + "." + name
-			if _, ok := RegisteredErrors[fullname]; ok {
-				panic(fmt.Sprintf(
-					"%s:%d: Error '%s' has already been defined",
-					file,
-					line,
-					fullname,
-				))
-			}
-			errcls := &ErrorClass{
-				Name:   fullname,
-				Code:   code,
-				Status: status,
-				Title:  title,
-			}
-			RegisteredErrors[fullname] = errcls
-			return errcls
-		}
-	}
-	panic(fmt.Sprintf(
-		"%s:%d: Couldn't determine package for error '%s'",
-		file,
-		line,
-		name,
-	))
 }
 
 func NewErrors() Errors {

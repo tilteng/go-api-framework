@@ -91,16 +91,6 @@ func (self *Controller) WriteResponse(ctx context.Context, v interface{}) error 
 	if tilterr, ok := v.(errors.ErrorType); ok {
 		status := tilterr.GetStatus()
 		rctx.SetStatus(status)
-
-		if status >= 500 {
-			json, json_err := tilterr.AsJSON()
-			if json_err != nil {
-				self.logger.LogErrorf(ctx, "Returning exception: %+v", tilterr)
-			} else {
-				self.logger.LogError(ctx, "Returning exception: "+json)
-			}
-		}
-
 		v = self.errorFormatter.FormatErrors(ctx, tilterr)
 	}
 

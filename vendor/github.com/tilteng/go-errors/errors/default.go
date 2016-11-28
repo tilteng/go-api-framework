@@ -22,3 +22,7 @@ var defaultErrorManager = NewErrorManager()
 func NewErrorClass(name string, code string, status int, title string) *ErrorClass {
 	return defaultErrorManager.NewClass(name, code, status, title)
 }
+
+func SetNewErrorHandler(handler NewErrorHandler) {
+	defaultErrorManager.SetNewErrorHandler(handler)
+}

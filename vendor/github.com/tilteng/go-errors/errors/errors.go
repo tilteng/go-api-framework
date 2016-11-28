@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"runtime"
@@ -20,9 +21,20 @@ func (self ErrIDGeneratorFn) GenErrID() string {
 	return self()
 }
 
+type NewErrorHandler interface {
+	HandleNewError(context.Context, ErrorType)
+}
+
+type NewErrorHandlerFn func(context.Context, ErrorType)
+
+func (self NewErrorHandlerFn) HandleNewError(ctx context.Context, err ErrorType) {
+	self(ctx, err)
+}
+
 type ErrorManager struct {
-	errorClasses   map[string]*ErrorClass
-	errIDGenerator ErrIDGenerator
+	errorClasses    map[string]*ErrorClass
+	errIDGenerator  ErrIDGenerator
+	newErrorHandler NewErrorHandler
 }
 
 func (self *ErrorManager) ErrorClasses() []ErrorClass {
@@ -31,6 +43,11 @@ func (self *ErrorManager) ErrorClasses() []ErrorClass {
 		classes = append(classes, *class)
 	}
 	return classes
+}
+
+func (self *ErrorManager) SetNewErrorHandler(handler NewErrorHandler) *ErrorManager {
+	self.newErrorHandler = handler
+	return self
 }
 
 func (self *ErrorManager) SetErrIDGenerator(generator ErrIDGenerator) *ErrorManager {
@@ -117,24 +134,40 @@ func (self *ErrorClass) newError(details string, forceFrames bool, skip int) *Er
 	return err
 }
 
-// Create an instance of an error
-// Create an instance of an error. Takes an optional argument to use to
-// set internal details
-func (self *ErrorClass) New(details string) *Error {
+// Create an instance of an error. This automatically 'commits' such
+// that the new error callback will be called, etc.
+func (self *ErrorClass) New(ctx context.Context, details string) *Error {
+	return self.newError(details, false, 1).Commit(ctx)
+}
+
+// Create an instance of an error. One must chain with Commit() to make
+// sure that any new error callback is called.
+func (self *ErrorClass) Start(details string) *Error {
 	return self.newError(details, false, 1)
 }
 
 // Create an instance of an error, including a stacktrace. 'skip' is how
+// many stack frames to skip. This automatically 'commits' such that
+// the new error callback will be called, etc.
+func (self *ErrorClass) NewWithStack(ctx context.Context, details string, skip int) *Error {
+	return self.newError(details, true, 1+skip).Commit(ctx)
+}
+
+// Create an instance of an error, including a stacktrace. 'skip' is how
 // many stack frames to skip.
-func (self *ErrorClass) NewWithStack(details string, skip int) *Error {
+func (self *ErrorClass) StartWithStack(details string, skip int) *Error {
 	return self.newError(details, true, 1+skip)
 }
 
 // Interface that both Error and Errors satisfies
 type ErrorType interface {
+	GetName() string
+	GetDetails() string
 	GetStatus() int
+	GetTitle() string
 	AsJSON() (string, error)
 	AsJSONAPIResponse() *JSONAPIErrorResponse
+	GetStackTrace() StackTrace
 }
 
 // An instance of an error
@@ -149,6 +182,21 @@ type Error struct {
 	InternalError    string                 `json:"internal_error,omitempty"`
 	InternalDetails  interface{}            `json:"internal_details,omitempty"`
 	InternalMetadata map[string]interface{} `json:"internal_metadata,omitempty"`
+}
+
+func (self *Error) Commit(ctx context.Context) *Error {
+	if hdlr := self.errorManager.newErrorHandler; hdlr != nil {
+		hdlr.HandleNewError(ctx, self)
+	}
+	return self
+}
+
+func (self *Error) GetName() string {
+	return self.Name
+}
+
+func (self *Error) GetDetails() string {
+	return self.Details
 }
 
 func (self *Error) GetStatus() int {
@@ -214,6 +262,14 @@ func (self *Error) AsJSON() (string, error) {
 	return string(byt), nil
 }
 
+func (self *Error) GetStackTrace() StackTrace {
+	return self.StackTrace
+}
+
+func (self *Error) GetTitle() string {
+	return self.Title
+}
+
 type Errors []*Error
 
 func (self *Errors) AddError(err *Error) {
@@ -233,8 +289,36 @@ func (self Errors) AsJSON() (string, error) {
 	return string(byt), nil
 }
 
+func (self Errors) GetName() string {
+	if len(self) == 0 {
+		return ""
+	}
+	return self[0].Name
+}
+
+func (self Errors) GetDetails() string {
+	if len(self) == 0 {
+		return ""
+	}
+	return self[0].Details
+}
+
+func (self Errors) GetTitle() string {
+	if len(self) == 0 {
+		return ""
+	}
+	return self[0].Title
+}
+
+func (self Errors) GetStackTrace() StackTrace {
+	if len(self) == 0 {
+		return nil
+	}
+	return self[0].GetStackTrace()
+}
+
 func (self Errors) GetStatus() int {
-	if self == nil || len(self) == 0 {
+	if len(self) == 0 {
 		return 0
 	}
 	return self[0].GetStatus()

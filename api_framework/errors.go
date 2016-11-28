@@ -3,6 +3,7 @@ package api_framework
 import (
 	"context"
 
+	"github.com/comstud/go-rollbar/rollbar"
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
 	"github.com/tilteng/go-errors/errors"
 )
@@ -43,7 +44,7 @@ func (self *Controller) handlePanic(ctx context.Context, v interface{}) {
 
 	err_obj, ok := v.(*errors.Error)
 	if !ok {
-		err_obj = ErrInternalServerError.New("")
+		err_obj = ErrInternalServerError.New(rctx, "")
 		err_obj.SetInternal(v)
 	}
 
@@ -75,7 +76,7 @@ func (self *Controller) handleJSONSchemaError(ctx context.Context, result *jsons
 	json_errors := result.Errors()
 	api_errors := make(errors.Errors, 0, len(json_errors))
 	for _, json_err := range json_errors {
-		err := ErrJSONSchemaValidationFailed.New("")
+		err := ErrJSONSchemaValidationFailed.New(rctx, "")
 		err.Details = json_err.String()
 		api_errors.AddError(err)
 	}
@@ -83,4 +84,87 @@ func (self *Controller) handleJSONSchemaError(ctx context.Context, result *jsons
 	self.WriteResponse(rctx, api_errors)
 
 	return false
+}
+
+func NewErrorHandler(ctx context.Context, err errors.ErrorType) {
+	rctx := RequestContextFromContext(ctx)
+	if rctx == nil {
+		return
+	}
+
+	status := err.GetStatus()
+	if status < 500 {
+		return
+	}
+
+	json, json_err := err.AsJSON()
+	if json_err != nil {
+		rctx.LogErrorf("Returning exception: %+v", err)
+	} else {
+		rctx.LogError("Returning exception: " + json)
+	}
+
+	if !rctx.RollbarEnabled() {
+		return
+	}
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				rctx.LogErrorf("Received error in rollbar goroutine: %+v",
+					r,
+				)
+			}
+		}()
+
+		http_req := rctx.HTTPRequest()
+
+		notif_req := &rollbar.NotifierRequest{
+			URL:    http_req.URL.String(),
+			Method: http_req.Method,
+		}
+
+		custom_info := rollbar.CustomInfo{
+			"error":    err,
+			"route":    rctx.CurrentRoute().FullPath(),
+			"trace_id": rctx.GetTraceID(),
+			"span_id":  rctx.GetSpanID(),
+		}
+
+		trace := err.GetStackTrace()
+		if len(trace) != 0 {
+			notif := rctx.RollbarClient().NewTraceNotification(
+				rollbar.LV_CRITICAL,
+				err.GetTitle(),
+				custom_info,
+			)
+			notif.Request = notif_req
+			notif.Trace.Exception = &rollbar.NotifierException{
+				Class:       err.GetName(),
+				Message:     err.GetTitle(),
+				Description: err.GetDetails(),
+			}
+
+			frames := make([]*rollbar.NotifierFrame, len(trace), len(trace))
+			for i, frame := range trace {
+				frames[i] = &rollbar.NotifierFrame{
+					Filename: frame.Filename,
+					Method:   frame.Function,
+					Line:     frame.LineNo,
+				}
+			}
+
+			notif.Trace.Frames = frames
+
+			rctx.RollbarClient().SendNotification(notif)
+		} else {
+			notif := rctx.RollbarClient().NewMessageNotification(
+				rollbar.LV_ERROR,
+				err.GetTitle(),
+				custom_info,
+			)
+			notif.Request = notif_req
+			rctx.RollbarClient().SendNotification(notif)
+		}
+	}()
 }

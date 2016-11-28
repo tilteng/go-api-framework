@@ -91,22 +91,23 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	uuid := self.UUIDFromString(id)
 	if uuid == nil {
 		self.WriteResponse(
-			ctx,
-			ErrInvalidKittenID.New("kitten id should be a uuid4 string"),
+			rctx,
+			ErrInvalidKittenID.New(rctx, "kitten id should be a uuid4 string"),
 		)
 		return
 	}
 	kitten, ok := kittens[uuid.String()]
 	if !ok {
 		self.WriteResponse(
-			ctx,
+			rctx,
 			ErrKittenNotFound.New(
+				rctx,
 				"kitten id '"+uuid.String()+"' does not exist",
 			),
 		)
 		return
 	}
-	self.WriteResponse(ctx, &createKittenBody{
+	self.WriteResponse(rctx, &createKittenBody{
 		Data: kittenData{
 			Kitten: *kitten,
 		},
@@ -134,6 +135,10 @@ func registerKittens(c *api_framework.Controller) (err error) {
 
 func main() {
 	port := 31337
+
+	errors.SetNewErrorHandler(errors.NewErrorHandlerFn(
+		api_framework.NewErrorHandler,
+	))
 
 	// AppContext is global application state
 	app_context, err := app_context.NewAppContext("kittens")

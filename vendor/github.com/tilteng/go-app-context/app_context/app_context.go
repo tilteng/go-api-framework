@@ -101,6 +101,13 @@ func (self *baseAppContext) setRollbarClientFromEnv() error {
 	} else {
 		self.rollbarClient = rcli
 		self.rollbarEnabled = true
+
+		opts := self.rollbarClient.Options()
+
+		env := os.Getenv("ROLLBAR_ENVIRONMENT")
+		if env == "development" || env == "staging" || env == "production" {
+			opts.Environment = env
+		}
 	}
 
 	return nil

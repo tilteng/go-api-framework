@@ -15,11 +15,18 @@ func (self *contextKey) String() string {
 	return "api_framework context value " + self.name
 }
 
-type RequestContext struct {
+type privateContext interface {
 	context.Context
+}
+
+type requestContext struct {
 	*api_router.RequestContext
+}
+
+type RequestContext struct {
+	privateContext
+	requestContext
 	appContext
-	controller               *Controller
 	serializerRequestContext serializers_mw.RequestContext
 }
 
@@ -29,19 +36,19 @@ func (self *RequestContext) Value(key interface{}) interface{} {
 	if key == requestContextCtxKey {
 		return self
 	}
-	return self.Context.Value(key)
+	return self.privateContext.Value(key)
 }
 
 func (self *Controller) newRequestContextFromContext(ctx context.Context) *RequestContext {
 	router_rctx := self.Router.RequestContext(ctx)
 	ser_rctx := serializers_mw.RequestContextFromContext(ctx)
-	return &RequestContext{
-		Context:                  ctx,
-		RequestContext:           router_rctx,
+	rctx := &RequestContext{
+		privateContext:           ctx,
 		appContext:               self.appContext,
-		controller:               self,
 		serializerRequestContext: ser_rctx,
 	}
+	rctx.requestContext.RequestContext = router_rctx
+	return rctx
 }
 
 func (self *Controller) RequestContext(ctx context.Context) *RequestContext {

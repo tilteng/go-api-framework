@@ -47,8 +47,8 @@ type ControllerOpts struct {
 
 type Controller struct {
 	*api_router.Router
-	options *ControllerOpts
 	appContext
+	options                *ControllerOpts
 	errorFormatter         ErrorFormatter
 	JSONSchemaMiddleware   *jsonschema_mw.JSONSchemaMiddleware
 	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware

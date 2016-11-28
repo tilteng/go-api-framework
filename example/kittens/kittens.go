@@ -132,14 +132,13 @@ func registerKittens(c *api_framework.Controller) (err error) {
 func main() {
 	port := 31337
 
+	// AppContext is global application state
 	app_context, err := app_context.NewAppContext("kittens")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	controller_opts := api_framework.NewControllerOpts()
-	// AppContext is global application state
-	controller_opts.AppContext = app_context
+	controller_opts := api_framework.NewControllerOpts(app_context)
 	// BaseAPIURL is used to specify the real externally reachable URL. This
 	// is used for returning paths to json schemas via the Link: header
 	controller_opts.BaseAPIURL = fmt.Sprintf("http://localhost:%d", port)

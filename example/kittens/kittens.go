@@ -143,9 +143,9 @@ func main() {
 
 	// Use AppContext's logger to set up a logger that logs request
 	// IDs. Then update AppContext's logger.
-	requestTraceManager := request_tracing.NewRequestTraceManager()
-	requestTraceManager.SetBaseLogger(app_context.Logger().BaseLogger())
-	logger := requestTraceManager.Logger()
+	req_trace_manager := request_tracing.NewRequestTraceManager()
+	req_trace_manager.SetBaseLogger(app_context.Logger().BaseLogger())
+	logger := req_trace_manager.Logger()
 	app_context.SetLogger(logger)
 
 	controller_opts := api_framework.NewControllerOpts(app_context)
@@ -158,6 +158,8 @@ func main() {
 	controller_opts.JSONSchemaRoutePath = "/schemas"
 	// If set, where output for apache-style logging goes
 	controller_opts.ApacheLogWriter = os.Stderr
+	// Set the request trace manager
+	controller_opts.RequestTraceManager = req_trace_manager
 
 	controller := api_framework.NewController(controller_opts)
 

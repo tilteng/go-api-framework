@@ -6,6 +6,7 @@ import (
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
 	"github.com/tilteng/go-api-panichandler/panichandler_mw"
+	"github.com/tilteng/go-api-request-logger/request_logger_mw"
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/tilteng/go-api-serializers/serializers_mw"
 	"github.com/tilteng/go-app-context/app_context"
@@ -90,6 +91,12 @@ func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) 
 
 	if log_mw := self.ApacheLoggerMiddleware; log_mw != nil {
 		fn = log_mw.NewWrapper().Wrap(fn)
+	}
+
+	if reqlog_mw := self.RequestLoggerMiddleware; reqlog_mw != nil {
+		if wrapper := reqlog_mw.NewWrapper(ctx, opts...); wrapper != nil {
+			fn = wrapper.Wrap(fn)
+		}
 	}
 
 	if metrics_mw := self.MetricsMiddleware; metrics_mw != nil {
@@ -186,6 +193,13 @@ func (self *Controller) Init(ctx context.Context) error {
 		}
 	}
 
+	if self.RequestLoggerMiddleware == nil && self.options.RequestLoggerOpts != nil {
+		if self.options.RequestLoggerOpts.Logger == nil {
+			self.options.RequestLoggerOpts.Logger = self.Logger()
+		}
+		self.RequestLoggerMiddleware = request_logger_mw.NewMiddleware(self.options.RequestLoggerOpts)
+	}
+
 	return nil
 }
 
@@ -194,10 +208,11 @@ func NewControllerOpts(app_context app_context.AppContext) *ControllerOpts {
 		panic("app_context must not be nil")
 	}
 	return &ControllerOpts{
-		AppContext:      app_context,
-		BaseAPIURL:      "http://localhost/",
-		ConsumesContent: []string{"application/json"},
-		ProducesContent: []string{"application/json"},
+		AppContext:        app_context,
+		BaseAPIURL:        "http://localhost/",
+		ConsumesContent:   []string{"application/json"},
+		ProducesContent:   []string{"application/json"},
+		RequestLoggerOpts: &request_logger_mw.RequestLoggerOpts{},
 	}
 }
 

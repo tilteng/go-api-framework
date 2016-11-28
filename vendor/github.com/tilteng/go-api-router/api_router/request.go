@@ -1,8 +1,10 @@
 package api_router
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -26,6 +28,16 @@ type RequestContext struct {
 
 func (self *RequestContext) Body() io.ReadCloser {
 	return self.request.Body
+}
+
+func (self *RequestContext) BodyCopy() (buf []byte, err error) {
+	body := self.request.Body
+	buf, err = ioutil.ReadAll(body)
+	if err == nil {
+		defer body.Close()
+		self.request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+	}
+	return
 }
 
 func (self *RequestContext) SetBody(body io.ReadCloser) {

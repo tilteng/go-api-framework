@@ -6,6 +6,7 @@ import (
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
 	"github.com/tilteng/go-api-panichandler/panichandler_mw"
+	"github.com/tilteng/go-api-request-logger/request_logger_mw"
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/tilteng/go-api-serializers/serializers_mw"
 	"github.com/tilteng/go-app-context/app_context"
@@ -43,6 +44,7 @@ type ControllerOpts struct {
 	ApacheLogCombined      bool
 	ErrorFormatter         ErrorFormatter
 	RequestTraceManager    request_tracing.RequestTraceManager
+	RequestLoggerOpts      *request_logger_mw.RequestLoggerOpts
 
 	// We pull metrics, rollbar, and logger from AppContext
 	AppContext app_context.AppContext
@@ -51,15 +53,16 @@ type ControllerOpts struct {
 type Controller struct {
 	*api_router.Router
 	appContext
-	logger                 logger.CtxLogger
-	options                *ControllerOpts
-	errorFormatter         ErrorFormatter
-	requestTraceManager    request_tracing.RequestTraceManager
-	JSONSchemaMiddleware   *jsonschema_mw.JSONSchemaMiddleware
-	PanicHandlerMiddleware *panichandler_mw.PanicHandlerMiddleware
-	SerializerMiddleware   *serializers_mw.SerializerMiddleware
-	ApacheLoggerMiddleware *apache_logger_mw.ApacheLoggerMiddleware
-	MetricsMiddleware      *metrics_mw.MetricsMiddleware
+	logger                  logger.CtxLogger
+	options                 *ControllerOpts
+	errorFormatter          ErrorFormatter
+	requestTraceManager     request_tracing.RequestTraceManager
+	JSONSchemaMiddleware    *jsonschema_mw.JSONSchemaMiddleware
+	PanicHandlerMiddleware  *panichandler_mw.PanicHandlerMiddleware
+	SerializerMiddleware    *serializers_mw.SerializerMiddleware
+	ApacheLoggerMiddleware  *apache_logger_mw.ApacheLoggerMiddleware
+	MetricsMiddleware       *metrics_mw.MetricsMiddleware
+	RequestLoggerMiddleware *request_logger_mw.RequestLoggerMiddleware
 }
 
 func (self *Controller) GenUUID() *UUID {

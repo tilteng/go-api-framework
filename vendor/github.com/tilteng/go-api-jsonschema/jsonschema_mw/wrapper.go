@@ -1,10 +1,8 @@
 package jsonschema_mw
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/xeipuuv/gojsonschema"
@@ -74,14 +72,11 @@ func (self *JSONSchemaWrapper) Wrap(next api_router.RouteFn) api_router.RouteFn 
 				),
 			)
 		}
-		body := rctx.Body()
-		buf, err := ioutil.ReadAll(body)
+		body, err := rctx.BodyCopy()
 		if err != nil {
 			panic(fmt.Sprintf("Error reading body: %s", err))
 		}
-		defer body.Close()
-		rctx.SetBody(ioutil.NopCloser(bytes.NewBuffer(buf)))
-		if self.validateBody(ctx, rctx, buf) {
+		if self.validateBody(ctx, rctx, body) {
 			next(ctx)
 		}
 	}

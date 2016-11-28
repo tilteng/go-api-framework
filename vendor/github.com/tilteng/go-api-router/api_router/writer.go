@@ -8,6 +8,7 @@ type ResponseWriter interface {
 	WriteStatusHeader()
 	Status() int
 	Size() int
+	ResponseCopy() []byte
 }
 
 type baseResponseWriter struct {
@@ -16,6 +17,7 @@ type baseResponseWriter struct {
 	statusWritten bool
 	status        int
 	size          int
+	response      []byte
 }
 
 func (self *baseResponseWriter) writeStatusHeader() {
@@ -30,6 +32,7 @@ func (self *baseResponseWriter) Write(b []byte) (int, error) {
 	if !self.statusWritten {
 		self.writeStatusHeader()
 	}
+	self.response = append(self.response, b...)
 	size, err := self.ResponseWriter.Write(b)
 	self.size += size
 	return size, err
@@ -60,6 +63,10 @@ func (self *baseResponseWriter) SetStatus(status int) {
 	if !self.statusWritten {
 		self.status = status
 	}
+}
+
+func (self *baseResponseWriter) ResponseCopy() []byte {
+	return self.response
 }
 
 type flushWriter struct {
@@ -106,6 +113,7 @@ func newResponseWriter(w http.ResponseWriter, default_status int) ResponseWriter
 	base_writer := &baseResponseWriter{
 		ResponseWriter: w,
 		defaultStatus:  default_status,
+		response:       make([]byte, 0, 0),
 	}
 
 	flusher, flusher_ok := w.(http.Flusher)

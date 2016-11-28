@@ -66,8 +66,7 @@ func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) 
 
 	// Create our Request right before calling middleware
 	fn := func(ctx context.Context) {
-		ctx, _ = self.getContexts(ctx)
-		orig_fn(ctx)
+		orig_fn(self.RequestContext(ctx))
 	}
 
 	// Wrap with our request last

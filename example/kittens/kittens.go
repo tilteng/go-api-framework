@@ -51,17 +51,12 @@ type Kitten struct {
 }
 
 func (self *KittensController) AddKitten(ctx context.Context) {
-	// RequestContext() handles taking a generic context and turning it
-	// into the framework's RequestContext struct. This struct is used
-	// to read bodies, write responses, etc.
-	rctx := self.RequestContext(ctx)
-
 	body_obj := &createKittenBody{}
 	// ReadBody() is a method on the Controller struct. It handles
 	// deserializing the body into whatever object you pass. If you're
 	// using the json schema middleware, the body has already been validated
 	// against the schema by this point.
-	rctx.ReadBody(ctx, &body_obj)
+	self.ReadBody(ctx, &body_obj)
 
 	kitten := &body_obj.Data.Kitten
 	kitten.Id = self.GenUUID()
@@ -74,10 +69,13 @@ func (self *KittensController) AddKitten(ctx context.Context) {
 	// serializing your data according to Accept: header and returing the
 	// response. POST routes automatically send back a 201 status code.
 	// See GET example below to see how you can return a differnt code.
-	rctx.WriteResponse(ctx, body_obj)
+	self.WriteResponse(ctx, body_obj)
 }
 
 func (self *KittensController) GetKitten(ctx context.Context) {
+	// RequestContext() handles taking a generic context and turning it
+	// into the framework's RequestContext struct. This struct is used
+	// to grab route vars, etc.
 	rctx := self.RequestContext(ctx)
 
 	// The route was defined as /kittens/{id}. This is how you pull the
@@ -87,7 +85,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 
 	uuid := self.UUIDFromString(id)
 	if uuid == nil {
-		rctx.WriteResponse(
+		self.WriteResponse(
 			ctx,
 			ErrInvalidKittenID.New("kitten id should be a uuid4 string"),
 		)
@@ -95,7 +93,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 	}
 	kitten, ok := kittens[uuid.String()]
 	if !ok {
-		rctx.WriteResponse(
+		self.WriteResponse(
 			ctx,
 			ErrKittenNotFound.New(
 				"kitten id '"+uuid.String()+"' does not exist",
@@ -103,7 +101,7 @@ func (self *KittensController) GetKitten(ctx context.Context) {
 		)
 		return
 	}
-	rctx.WriteResponse(ctx, &createKittenBody{
+	self.WriteResponse(ctx, &createKittenBody{
 		Data: kittenData{
 			Kitten: *kitten,
 		},

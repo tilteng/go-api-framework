@@ -5,7 +5,6 @@ import (
 
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/tilteng/go-api-serializers/serializers_mw"
-	"github.com/tilteng/go-errors/errors"
 )
 
 type contextKey struct {
@@ -17,6 +16,7 @@ func (self *contextKey) String() string {
 }
 
 type RequestContext struct {
+	context.Context
 	*api_router.RequestContext
 	appContext
 	controller               *Controller
@@ -25,39 +25,29 @@ type RequestContext struct {
 
 var requestContextCtxKey = &contextKey{"request_context"}
 
+func (self *RequestContext) Value(key interface{}) interface{} {
+	if key == requestContextCtxKey {
+		return self
+	}
+	return self.Context.Value(key)
+}
+
 func (self *Controller) newRequestContextFromContext(ctx context.Context) *RequestContext {
-	rctx := self.Router.RequestContext(ctx)
+	router_rctx := self.Router.RequestContext(ctx)
 	ser_rctx := serializers_mw.RequestContextFromContext(ctx)
 	return &RequestContext{
-		RequestContext:           rctx,
+		Context:                  ctx,
+		RequestContext:           router_rctx,
 		appContext:               self.appContext,
 		controller:               self,
 		serializerRequestContext: ser_rctx,
 	}
 }
 
-func (self *RequestContext) ReadBody(ctx context.Context, v interface{}) error {
-	return serializers_mw.DeserializedBody(ctx, v)
-}
-
-func (self *RequestContext) WriteResponse(ctx context.Context, v interface{}) error {
-	if tilterr, ok := v.(errors.ErrorType); ok {
-		status := tilterr.GetStatus()
-		self.SetStatus(status)
-
-		if status >= 500 {
-			json, json_err := tilterr.AsJSON()
-			if json_err != nil {
-				self.LogErrorf("Returning exception: %+v", tilterr)
-			} else {
-				self.LogError("Returning exception: " + json)
-			}
-		}
-
-		resp := self.controller.errorFormatter.FormatErrors(ctx, tilterr)
-
-		return self.serializerRequestContext.WriteSerializedResponse(ctx, resp)
+func (self *Controller) RequestContext(ctx context.Context) *RequestContext {
+	if rctx, ok := ctx.Value(requestContextCtxKey).(*RequestContext); ok {
+		return rctx
 	}
 
-	return self.serializerRequestContext.WriteSerializedResponse(ctx, v)
+	return self.newRequestContextFromContext(ctx)
 }

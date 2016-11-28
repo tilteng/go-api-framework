@@ -21,7 +21,7 @@ var serializers = map[string]Serializer{
 
 type RequestContext interface {
 	WriteSerializedResponse(context.Context, interface{}) error
-	DeserializedBody(context.Context, interface{}) error
+	ReadDeserializedBody(context.Context, interface{}) error
 }
 
 type requestContext struct {
@@ -38,7 +38,7 @@ func (self *requestContext) WriteSerializedResponse(_ context.Context, v interfa
 	)
 }
 
-func (self *requestContext) DeserializedBody(_ context.Context, v interface{}) error {
+func (self *requestContext) ReadDeserializedBody(_ context.Context, v interface{}) error {
 	return self.deserializer.DeserializeFromReader(
 		self.rctx.Body(),
 		v,

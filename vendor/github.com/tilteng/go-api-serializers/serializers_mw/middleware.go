@@ -134,10 +134,10 @@ func WriteSerializedResponse(ctx context.Context, v interface{}) error {
 	return mw_rctx.WriteSerializedResponse(ctx, v)
 }
 
-func DeserializedBody(ctx context.Context, v interface{}) error {
+func ReadDeserializedBody(ctx context.Context, v interface{}) error {
 	mw_rctx, ok := ctx.Value(requestContextCtxKey).(*requestContext)
 	if !ok {
 		return errors.New("Request did not pass through serializers middleware")
 	}
-	return mw_rctx.DeserializedBody(ctx, v)
+	return mw_rctx.ReadDeserializedBody(ctx, v)
 }

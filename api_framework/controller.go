@@ -57,10 +57,6 @@ type Controller struct {
 	MetricsMiddleware      *metrics_mw.MetricsMiddleware
 }
 
-func (self *Controller) RequestContext(ctx context.Context) *RequestContext {
-	return RequestContextFromContext(ctx)
-}
-
 func (self *Controller) GenUUID() *UUID {
 	return GenUUID()
 }
@@ -71,6 +67,32 @@ func (self *Controller) GenUUIDHex() string {
 
 func (self *Controller) UUIDFromString(s string) *UUID {
 	return UUIDFromString(s)
+}
+
+func (self *Controller) ReadBody(ctx context.Context, v interface{}) error {
+	rctx := self.RequestContext(ctx)
+	return rctx.serializerRequestContext.ReadDeserializedBody(rctx, v)
+}
+
+func (self *Controller) WriteResponse(ctx context.Context, v interface{}) error {
+	rctx := self.RequestContext(ctx)
+	if tilterr, ok := v.(errors.ErrorType); ok {
+		status := tilterr.GetStatus()
+		rctx.SetStatus(status)
+
+		if status >= 500 {
+			json, json_err := tilterr.AsJSON()
+			if json_err != nil {
+				self.LogErrorf("Returning exception: %+v", tilterr)
+			} else {
+				self.LogError("Returning exception: " + json)
+			}
+		}
+
+		v = self.errorFormatter.FormatErrors(ctx, tilterr)
+	}
+
+	return rctx.serializerRequestContext.WriteSerializedResponse(rctx, v)
 }
 
 func RequestContextFromContext(ctx context.Context) *RequestContext {

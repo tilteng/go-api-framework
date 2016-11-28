@@ -53,7 +53,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-serializers/serializers_mw",
-			"Rev": "ad89d26f857847cf32de5c29ccfbde9bfa71700a"
+			"Rev": "83f8e4b1927217a65fe571ab8136caf71149acff"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-app-context/app_context",

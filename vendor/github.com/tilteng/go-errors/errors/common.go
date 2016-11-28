@@ -9,6 +9,14 @@ var ErrJSONSchemaValidationFailed = NewErrorClass(
 )
 
 // This is generally used for uncaught panics
+var ErrRouteNotFound = NewErrorClass(
+	"ErrRouteNotFound",
+	"ERR_ID_ROUTE_NOT_FOUND",
+	404,
+	"That route does not exist",
+)
+
+// This is generally used for uncaught panics
 var ErrInternalServerError = NewErrorClass(
 	"ErrInternalServerError",
 	"ERR_ID_INTERNAL_SERVER_ERROR",

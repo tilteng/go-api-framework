@@ -10,6 +10,7 @@ type FrameworkRouter interface {
 	http.Handler
 	NewRoute(method string, path string, fn http.HandlerFunc) FrameworkRoute
 	SubRouterForPath(path string) FrameworkRouter
+	Set404Handler(fn http.HandlerFunc)
 }
 
 type Framework interface {

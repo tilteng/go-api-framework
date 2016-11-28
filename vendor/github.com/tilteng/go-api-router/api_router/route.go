@@ -10,6 +10,7 @@ type Route struct {
 	fullPath      string
 	defaultStatus int
 	routeFn       RouteFn
+	virtual       bool
 }
 
 func (self *Route) RouteFn() RouteFn {
@@ -29,6 +30,9 @@ func (self *Route) Path() string {
 }
 
 func (self *Route) RouteVars(r *http.Request) map[string]string {
+	if self.fwRoute == nil {
+		return make(map[string]string)
+	}
 	return self.fwRoute.RouteVars(r)
 }
 
@@ -42,7 +46,7 @@ func (self *Route) SetDefaultStatus(status int) *Route {
 	return self
 }
 
-func (self *Route) register(fn RouteFn) *Route {
+func (self *Route) register() *Route {
 	if self.defaultStatus == 0 {
 		if self.method == "POST" {
 			self.defaultStatus = 201
@@ -51,13 +55,12 @@ func (self *Route) register(fn RouteFn) *Route {
 		}
 	}
 
-	self.routeFn = fn
-
 	self.fwRoute = self.router.fwRouter.NewRoute(
 		self.method,
 		self.path,
 		self.handleRequest,
 	)
+
 	return self
 }
 

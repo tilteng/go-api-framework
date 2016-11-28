@@ -9,6 +9,7 @@ import (
 
 var ErrInternalServerError = errors.ErrInternalServerError
 var ErrJSONSchemaValidationFailed = errors.ErrJSONSchemaValidationFailed
+var ErrRouteNotFound = errors.ErrRouteNotFound
 
 // Called to format an error or errors. Pass to custom callback, if set.
 func (self *Controller) formatErrors(ctx context.Context, errtype errors.ErrorType) interface{} {

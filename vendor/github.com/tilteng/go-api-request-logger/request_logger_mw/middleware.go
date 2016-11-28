@@ -119,6 +119,10 @@ func (self *RequestLoggerWrapper) Wrap(next api_router.RouteFn) api_router.Route
 	return func(ctx context.Context) {
 		rctx := api_router.RequestContextFromContext(ctx)
 		rt := rctx.CurrentRoute()
+		http_req := rctx.HTTPRequest()
+		method := http_req.Method
+		path := http_req.URL.String()
+
 		body, err := rctx.BodyCopy()
 		if err != nil {
 			panic(fmt.Sprintf("Couldn't read body: %+v", err))
@@ -127,9 +131,9 @@ func (self *RequestLoggerWrapper) Wrap(next api_router.RouteFn) api_router.Route
 			self.opts.Logger.LogDebugf(
 				ctx,
 				`Received request: route:{"method":"%s","route":"%s","path":"%s"} headers:%s body:%s`,
-				rt.Method(),
+				method,
 				rt.FullPath(),
-				rctx.HTTPRequest().URL.String(),
+				path,
 				self.formatHeaders(ctx, rctx.HTTPRequest().Header),
 				self.formatBody(ctx, body),
 			)
@@ -145,9 +149,9 @@ func (self *RequestLoggerWrapper) Wrap(next api_router.RouteFn) api_router.Route
 			ctx,
 			`Sent response: route:{"status":%d,"method":"%s","route":"%s","path":"%s"} headers:%s body:%s`,
 			writer.Status(),
-			rt.Method(),
+			method,
 			rt.FullPath(),
-			rctx.HTTPRequest().URL.String(),
+			path,
 			self.formatHeaders(ctx, rctx.ResponseWriter().Header()),
 			self.formatBody(ctx, body),
 		)

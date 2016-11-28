@@ -18,6 +18,10 @@ type muxRouter struct {
 	*mux.Router
 }
 
+func (self *muxRouter) Set404Handler(fn http.HandlerFunc) {
+	self.Router.NotFoundHandler = fn
+}
+
 func (self *muxRouter) NewRoute(method string, path string, fn http.HandlerFunc) FrameworkRoute {
 	return &muxRoute{Route: self.HandleFunc(path, fn).Methods(method)}
 }

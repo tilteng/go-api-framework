@@ -29,11 +29,30 @@ func (self *Router) NewRoute(method string, path string, fn RouteFn, opts ...int
 		fullPath: combinePaths(self.basePath, path),
 		routeFn:  fn,
 	}
-	rt.register(fn)
+	rt.register()
 	self.topRouter.routes = append(self.topRouter.routes, rt)
 	if self.newRouteNotifier != nil {
 		self.newRouteNotifier(rt, opts...)
 	}
+	return rt
+}
+
+func (self *Router) Set404Handler(fn RouteFn) *Route {
+	rt := &Route{
+		router:        self,
+		method:        "ANY",
+		path:          "<404_Handler>",
+		fullPath:      "<404_Handler>",
+		routeFn:       fn,
+		defaultStatus: 404,
+	}
+
+	self.fwRouter.Set404Handler(rt.handleRequest)
+
+	if self.newRouteNotifier != nil {
+		self.newRouteNotifier(rt)
+	}
+
 	return rt
 }
 

@@ -106,9 +106,12 @@ func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) 
 	// Set up request IDs first.
 
 	top_fn := func(ctx context.Context) {
+		rctx := self.Router.RequestContext(ctx)
 		rt := self.requestTraceManager.NewRequestTraceFromHTTPRequest(
-			self.Router.RequestContext(ctx).HTTPRequest(),
+			rctx.HTTPRequest(),
 		)
+		rctx.SetResponseHeader("X-Trace-Id", rt.GetTraceID())
+		rctx.SetResponseHeader("X-Span-Id", rt.GetSpanID())
 		fn(self.requestTraceManager.ContextWithRequestTrace(ctx, rt))
 	}
 
@@ -199,6 +202,13 @@ func (self *Controller) Init(ctx context.Context) error {
 		}
 		self.RequestLoggerMiddleware = request_logger_mw.NewMiddleware(self.options.RequestLoggerOpts)
 	}
+
+	self.Router.Set404Handler(func(ctx context.Context) {
+		path := self.RequestContext(ctx).HTTPRequest().URL.String()
+		self.WriteResponse(ctx, ErrRouteNotFound.New(
+			fmt.Sprintf("Route does not exist: %s", path),
+		))
+	})
 
 	return nil
 }

@@ -54,19 +54,19 @@ func (self *noopClient) GetOccurrencesWithPage(page uint64) (*OccurrencesRespons
 }
 
 func (self *noopClient) NewMessageNotification(level NotificationLevel, message string, custom CustomInfo) *MessageNotification {
-	return &MessageNotification{}
+	return NewMessageNotification(level, message, custom)
 }
 
 func (self *noopClient) NewTraceNotification(level NotificationLevel, message string, custom CustomInfo) *TraceNotification {
-	return &TraceNotification{}
+	return NewTraceNotification(level, message, custom)
 }
 
 func (self *noopClient) NewTraceChainNotification(level NotificationLevel, message string, custom CustomInfo) *TraceChainNotification {
-	return &TraceChainNotification{}
+	return NewTraceChainNotification(level, message, custom)
 }
 
 func (self *noopClient) NewCrashReportNotification(level NotificationLevel, message string, custom CustomInfo) *CrashReportNotification {
-	return &CrashReportNotification{}
+	return NewCrashReportNotification(level, message, custom)
 }
 
 func (self *noopClient) SendNotification(notif Notification) (*NotificationResponse, error) {

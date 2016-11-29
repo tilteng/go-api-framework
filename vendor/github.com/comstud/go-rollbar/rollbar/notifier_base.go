@@ -1,9 +1,15 @@
 package rollbar
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
-// base notifcation object to post as 'data'. This base
+// base notifcation object to post as 'data'.
 type baseNotification struct {
+	// pointer back to real Notification obj
+	self Notification `json:"-"`
+
 	// Required
 
 	Environment string `json:"environment"`
@@ -41,8 +47,151 @@ func (self *baseNotification) GetEnvironment() string {
 	return self.Environment
 }
 
+func (self *baseNotification) SetEnvironment(env string) {
+	self.Environment = env
+}
+
 func (self *baseNotification) GetLevel() NotificationLevel {
 	return self.Level
+}
+
+func (self *baseNotification) SetLevel(level NotificationLevel) {
+	self.Level = level
+}
+
+func (self *baseNotification) GetTimestamp() time.Time {
+	return time.Unix(self.Timestamp, 0)
+}
+
+func (self *baseNotification) SetTimestamp(t time.Time) Notification {
+	self.Timestamp = t.Unix()
+	return self.self
+}
+
+func (self *baseNotification) GetCodeVersion() string {
+	return self.CodeVersion
+}
+
+func (self *baseNotification) SetCodeVersion(vers string) Notification {
+	self.CodeVersion = vers
+	return self.self
+}
+
+func (self *baseNotification) GetPlatform() string {
+	return self.Platform
+}
+
+func (self *baseNotification) SetPlatform(platform string) Notification {
+	self.Platform = platform
+	return self.self
+}
+
+func (self *baseNotification) GetLanguage() string {
+	return self.Language
+}
+
+func (self *baseNotification) SetLanguage(lang string) Notification {
+	self.Language = lang
+	return self.self
+}
+
+func (self *baseNotification) GetFramework() string {
+	return self.Framework
+}
+
+func (self *baseNotification) SetFramework(framework string) Notification {
+	self.Framework = framework
+	return self.self
+}
+
+func (self *baseNotification) GetContext() string {
+	return self.Context
+}
+
+func (self *baseNotification) SetContext(context string) Notification {
+	self.Context = context
+	return self.self
+}
+
+func (self *baseNotification) GetRequest() *NotifierRequest {
+	return self.Request
+}
+
+func (self *baseNotification) SetRequest(req *NotifierRequest) Notification {
+	self.Request = req
+	return self.self
+}
+
+func (self *baseNotification) GetPerson() *NotifierPerson {
+	return self.Person
+}
+
+func (self *baseNotification) SetPerson(person *NotifierPerson) Notification {
+	self.Person = person
+	return self.self
+}
+
+func (self *baseNotification) GetServer() *NotifierServer {
+	return self.Server
+}
+
+func (self *baseNotification) SetServer(server *NotifierServer) Notification {
+	self.Server = server
+	return self.self
+}
+
+func (self *baseNotification) GetClient() *NotifierClient {
+	return self.Client
+}
+
+func (self *baseNotification) SetClient(client *NotifierClient) Notification {
+	self.Client = client
+	return self.self
+}
+
+func (self *baseNotification) GetCustom() CustomInfo {
+	return self.Custom
+}
+
+func (self *baseNotification) SetCustom(custom CustomInfo) Notification {
+	self.Custom = custom
+	return self.self
+}
+
+func (self *baseNotification) GetFingerprint() string {
+	return self.Fingerprint
+}
+
+func (self *baseNotification) SetFingerprint(fingerprint string) Notification {
+	self.Fingerprint = fingerprint
+	return self.self
+}
+
+func (self *baseNotification) GetTitle() string {
+	return self.Title
+}
+
+func (self *baseNotification) SetTitle(title string) Notification {
+	self.Title = title
+	return self.self
+}
+
+func (self *baseNotification) GetUUID() string {
+	return self.UUID
+}
+
+func (self *baseNotification) SetUUID(uuid string) Notification {
+	self.UUID = uuid
+	return self.self
+}
+
+func (self *baseNotification) GetNotifier() *NotifierLibrary {
+	return self.Notifier
+}
+
+func (self *baseNotification) SetNotifier(notifier *NotifierLibrary) Notification {
+	self.Notifier = notifier
+	return self.self
 }
 
 // Optional data about client making the request

@@ -18,7 +18,7 @@
 		},
 		{
 			"ImportPath": "github.com/comstud/go-rollbar/rollbar",
-			"Rev": "16472eccf4c1aae3eb178371173a2396ac46ffe4"
+			"Rev": "fe98f7141ef23533b3bbcad4bfd2aede4a499f3d"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",

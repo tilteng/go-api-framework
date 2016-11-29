@@ -117,12 +117,7 @@ func NewErrorHandler(ctx context.Context, err errors.ErrorType) {
 			}
 		}()
 
-		http_req := rctx.HTTPRequest()
-
-		notif_req := &rollbar.NotifierRequest{
-			URL:    http_req.URL.String(),
-			Method: http_req.Method,
-		}
+		var notif rollbar.Notification
 
 		custom_info := rollbar.CustomInfo{
 			"error":    err,
@@ -133,13 +128,13 @@ func NewErrorHandler(ctx context.Context, err errors.ErrorType) {
 
 		trace := err.GetStackTrace()
 		if len(trace) != 0 {
-			notif := rctx.RollbarClient().NewTraceNotification(
+			tnotif := rctx.RollbarClient().NewTraceNotification(
 				rollbar.LV_CRITICAL,
 				err.GetTitle(),
 				custom_info,
 			)
-			notif.Request = notif_req
-			notif.Trace.Exception = &rollbar.NotifierException{
+
+			tnotif.Trace.Exception = &rollbar.NotifierException{
 				Class:       err.GetName(),
 				Message:     err.GetTitle(),
 				Description: err.GetDetails(),
@@ -154,17 +149,21 @@ func NewErrorHandler(ctx context.Context, err errors.ErrorType) {
 				}
 			}
 
-			notif.Trace.Frames = frames
-
-			rctx.RollbarClient().SendNotification(notif)
+			tnotif.Trace.Frames = frames
+			notif = tnotif
 		} else {
-			notif := rctx.RollbarClient().NewMessageNotification(
+			notif = rctx.RollbarClient().NewMessageNotification(
 				rollbar.LV_ERROR,
 				err.GetTitle(),
 				custom_info,
 			)
-			notif.Request = notif_req
-			rctx.RollbarClient().SendNotification(notif)
 		}
+
+		http_req := rctx.HTTPRequest()
+		notif.SetRequest(&rollbar.NotifierRequest{
+			URL:    http_req.URL.String(),
+			Method: http_req.Method,
+		})
+		rctx.RollbarClient().SendNotification(notif)
 	}()
 }

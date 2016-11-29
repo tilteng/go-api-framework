@@ -61,7 +61,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-app-context/app_context",
-			"Rev": "d519f2420b2895d05288f23e30cb42f1cfddde09"
+			"Rev": "fba8178aed7ec0cf3cb78dde229ba884a27ec01d"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",

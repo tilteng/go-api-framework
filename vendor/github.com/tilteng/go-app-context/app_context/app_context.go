@@ -23,6 +23,7 @@ type AppContext interface {
 	MetricsEnabled() bool
 	DB() *sql.DB
 	SetLogger(logger.CtxLogger) AppContext
+	CodeVersion() string
 }
 
 type baseAppContext struct {
@@ -34,6 +35,11 @@ type baseAppContext struct {
 	metricsClient  metrics.MetricsClient
 	metricsEnabled bool
 	db             *sql.DB
+	codeVersion    string
+}
+
+func (self *baseAppContext) CodeVersion() string {
+	return self.codeVersion
 }
 
 func (self *baseAppContext) DB() *sql.DB {
@@ -107,6 +113,10 @@ func (self *baseAppContext) setRollbarClientFromEnv() error {
 		env := os.Getenv("ROLLBAR_ENVIRONMENT")
 		if env == "development" || env == "staging" || env == "production" {
 			opts.Environment = env
+		}
+
+		if len(self.codeVersion) != 0 {
+			opts.NotifierServer.CodeVersion = self.codeVersion
 		}
 	}
 
@@ -200,6 +210,9 @@ func NewAppContext(app_name string) (AppContext, error) {
 	} else {
 		appctx.hostname = host
 	}
+
+	// Set this before we setup rollbarClient
+	appctx.codeVersion = os.Getenv("CODE_VERSION")
 
 	if err := appctx.setMetricsClientFromEnv(); err != nil {
 		return nil, fmt.Errorf("Error setting metrics client: %s", err)

@@ -8,7 +8,7 @@ import (
 // base notifcation object to post as 'data'.
 type baseNotification struct {
 	// pointer back to real Notification obj
-	self Notification `json:"-"`
+	self Notification
 
 	// Required
 

@@ -134,8 +134,6 @@ func registerKittens(c *api_framework.Controller) (err error) {
 }
 
 func main() {
-	port := 31337
-
 	errors.SetNewErrorHandler(errors.NewErrorHandlerFn(
 		api_framework.NewErrorHandler,
 	))
@@ -144,6 +142,21 @@ func main() {
 	app_context, err := app_context.NewAppContext("kittens")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	port := app_context.APIPort()
+	if port == 0 {
+		port = 31337
+	}
+
+	json_file_path := app_context.JSONSchemaFilePath()
+	if len(json_file_path) == 0 {
+		json_file_path = "./schemas"
+	}
+
+	ext_base_url := app_context.BaseExternalURL()
+	if len(ext_base_url) == 0 {
+		ext_base_url = fmt.Sprintf("http://localhost:%d", port)
 	}
 
 	// Use AppContext's logger to set up a logger that logs request
@@ -156,9 +169,9 @@ func main() {
 	controller_opts := api_framework.NewControllerOpts(app_context)
 	// BaseAPIURL is used to specify the real externally reachable URL. This
 	// is used for returning paths to json schemas via the Link: header
-	controller_opts.BaseAPIURL = fmt.Sprintf("http://localhost:%d", port)
+	controller_opts.BaseAPIURL = ext_base_url
 	// Directory containing json schema files to load. Must end in .json
-	controller_opts.JSONSchemaFilePath = "./schemas"
+	controller_opts.JSONSchemaFilePath = json_file_path
 	// HTTP path where to make json schemas available
 	controller_opts.JSONSchemaRoutePath = "/schemas"
 	// If set, where output for apache-style logging goes

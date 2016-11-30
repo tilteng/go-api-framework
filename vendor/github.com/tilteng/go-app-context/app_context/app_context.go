@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/comstud/go-rollbar/rollbar"
@@ -14,28 +15,46 @@ import (
 )
 
 type AppContext interface {
+	APIPort() int
 	AppName() string
+	BaseExternalURL() string
+	CodeVersion() string
+	DB() *sql.DB
 	Hostname() string
+	JSONSchemaFilePath() string
 	Logger() logger.CtxLogger
-	RollbarClient() rollbar.Client
-	RollbarEnabled() bool
 	MetricsClient() metrics.MetricsClient
 	MetricsEnabled() bool
-	DB() *sql.DB
+	RollbarClient() rollbar.Client
+	RollbarEnabled() bool
 	SetLogger(logger.CtxLogger) AppContext
-	CodeVersion() string
 }
 
 type baseAppContext struct {
-	logger         logger.CtxLogger
-	appName        string
-	hostname       string
-	rollbarClient  rollbar.Client
-	rollbarEnabled bool
-	metricsClient  metrics.MetricsClient
-	metricsEnabled bool
-	db             *sql.DB
-	codeVersion    string
+	apiPort            int
+	appName            string
+	baseExternalURL    string
+	codeVersion        string
+	db                 *sql.DB
+	hostname           string
+	jsonSchemaFilePath string
+	logger             logger.CtxLogger
+	metricsClient      metrics.MetricsClient
+	metricsEnabled     bool
+	rollbarClient      rollbar.Client
+	rollbarEnabled     bool
+}
+
+func (self *baseAppContext) APIPort() int {
+	return self.apiPort
+}
+
+func (self *baseAppContext) AppName() string {
+	return self.appName
+}
+
+func (self *baseAppContext) BaseExternalURL() string {
+	return self.baseExternalURL
 }
 
 func (self *baseAppContext) CodeVersion() string {
@@ -46,32 +65,32 @@ func (self *baseAppContext) DB() *sql.DB {
 	return self.db
 }
 
-func (self *baseAppContext) Logger() logger.CtxLogger {
-	return self.logger
+func (self *baseAppContext) Hostname() string {
+	return self.hostname
 }
 
-func (self *baseAppContext) RollbarClient() rollbar.Client {
-	return self.rollbarClient
+func (self *baseAppContext) JSONSchemaFilePath() string {
+	return self.jsonSchemaFilePath
+}
+
+func (self *baseAppContext) Logger() logger.CtxLogger {
+	return self.logger
 }
 
 func (self *baseAppContext) MetricsClient() metrics.MetricsClient {
 	return self.metricsClient
 }
 
-func (self *baseAppContext) Hostname() string {
-	return self.hostname
+func (self *baseAppContext) MetricsEnabled() bool {
+	return self.metricsEnabled
 }
 
-func (self *baseAppContext) AppName() string {
-	return self.appName
+func (self *baseAppContext) RollbarClient() rollbar.Client {
+	return self.rollbarClient
 }
 
 func (self *baseAppContext) RollbarEnabled() bool {
 	return self.rollbarEnabled
-}
-
-func (self *baseAppContext) MetricsEnabled() bool {
-	return self.metricsEnabled
 }
 
 func (self *baseAppContext) SetLogger(logger logger.CtxLogger) AppContext {
@@ -195,6 +214,20 @@ func (self *baseAppContext) setDBFromEnv() error {
 	return nil
 }
 
+func getIntFromEnv(name string) (int, bool, error) {
+	str, found := os.LookupEnv(name)
+	if !found || str == "" {
+		return 0, found, nil
+	}
+
+	num, err := strconv.Atoi(str)
+	if err != nil {
+		return 0, true, fmt.Errorf("Env '%s' is not a number: %s", name, err)
+	}
+
+	return num, true, nil
+}
+
 func NewAppContext(app_name string) (AppContext, error) {
 	appctx := &baseAppContext{
 		logger:         logger.DefaultStdoutCtxLogger(),
@@ -213,6 +246,17 @@ func NewAppContext(app_name string) (AppContext, error) {
 
 	// Set this before we setup rollbarClient
 	appctx.codeVersion = os.Getenv("CODE_VERSION")
+
+	if port, _, err := getIntFromEnv("API_PORT"); err != nil {
+		return nil, err
+	} else if port < 0 {
+		return nil, errors.New("API_PORT can't be a negative number")
+	} else {
+		appctx.apiPort = port
+	}
+
+	appctx.jsonSchemaFilePath = os.Getenv("JSON_SCHEMA_FILEPATH")
+	appctx.baseExternalURL = os.Getenv("BASE_URL")
 
 	if err := appctx.setMetricsClientFromEnv(); err != nil {
 		return nil, fmt.Errorf("Error setting metrics client: %s", err)

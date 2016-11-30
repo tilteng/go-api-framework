@@ -53,7 +53,7 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-router/api_router",
-			"Rev": "1bd99ce5a95710de059331007b54af51911eaf5e"
+			"Rev": "ab7b85ae59ab8e5cd088af3febd4d969f1162afc"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-serializers/serializers_mw",

@@ -71,4 +71,6 @@ func (self *Route) handleRequest(w http.ResponseWriter, r *http.Request) {
 		self,
 	)
 	self.routeFn(ctx)
+	// Ensure we've set status, even if no body was written
+	ctx.writer.WriteStatusHeader()
 }

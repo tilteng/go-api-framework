@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/tilteng/go-api-router/api_router"
 	"github.com/tilteng/go-logger/logger"
@@ -102,6 +103,11 @@ func (self *RequestLoggerWrapper) formatBody(ctx context.Context, body []byte) i
 	return `"` + body_str + `"`
 }
 
+func (self *RequestLoggerWrapper) formatQuery(ctx context.Context, v url.Values) string {
+	j, _ := json.Marshal(v)
+	return string(j)
+}
+
 func (self *RequestLoggerWrapper) formatHeaders(ctx context.Context, hdrs http.Header) interface{} {
 	if self.opts.LogHeadersFilter != nil {
 		hdrs = self.opts.LogHeadersFilter.FilterHeaders(ctx, hdrs)
@@ -121,7 +127,7 @@ func (self *RequestLoggerWrapper) Wrap(next api_router.RouteFn) api_router.Route
 		rt := rctx.CurrentRoute()
 		http_req := rctx.HTTPRequest()
 		method := http_req.Method
-		path := http_req.URL.String()
+		path := http_req.URL.EscapedPath()
 
 		body, err := rctx.BodyCopy()
 		if err != nil {
@@ -130,10 +136,11 @@ func (self *RequestLoggerWrapper) Wrap(next api_router.RouteFn) api_router.Route
 		if self.opts.Logger != nil && !self.opts.Disable {
 			self.opts.Logger.LogDebugf(
 				ctx,
-				`Received request: route:{"method":"%s","route":"%s","path":"%s"} headers:%s body:%s`,
+				`Received request: {"route":{"method":"%s","route":"%s","path":"%s","query":%s},"headers":%s,"body":%s}`,
 				method,
 				rt.FullPath(),
 				path,
+				self.formatQuery(ctx, http_req.URL.Query()),
 				self.formatHeaders(ctx, rctx.HTTPRequest().Header),
 				self.formatBody(ctx, body),
 			)
@@ -147,7 +154,7 @@ func (self *RequestLoggerWrapper) Wrap(next api_router.RouteFn) api_router.Route
 
 		self.opts.Logger.LogDebugf(
 			ctx,
-			`Sent response: route:{"status":%d,"method":"%s","route":"%s","path":"%s"} headers:%s body:%s`,
+			`Sent response: {"status":%d,"route":{"method":"%s","route":"%s","path":"%s"},"headers":%s,"body":%s}`,
 			writer.Status(),
 			method,
 			rt.FullPath(),

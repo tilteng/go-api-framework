@@ -205,7 +205,7 @@ func (self *Controller) Init(ctx context.Context) error {
 
 	self.Router.Set404Handler(func(ctx context.Context) {
 		rctx := self.RequestContext(ctx)
-		path := rctx.HTTPRequest().URL.String()
+		path := rctx.HTTPRequest().URL.EscapedPath()
 		self.WriteResponse(rctx, ErrRouteNotFound.New(
 			rctx,
 			fmt.Sprintf("Route does not exist: %s", path),

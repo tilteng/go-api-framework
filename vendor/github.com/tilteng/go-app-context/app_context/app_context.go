@@ -15,7 +15,6 @@ import (
 )
 
 type AppContext interface {
-	APIPort() int
 	AppName() string
 	BaseExternalURL() string
 	CodeVersion() string
@@ -27,15 +26,17 @@ type AppContext interface {
 	MetricsEnabled() bool
 	RollbarClient() rollbar.Client
 	RollbarEnabled() bool
+	ServicePort() int
 	SetLogger(logger.CtxLogger) AppContext
 }
 
 type baseAppContext struct {
-	apiPort            int
 	appName            string
 	baseExternalURL    string
 	codeVersion        string
 	db                 *sql.DB
+	dbMaxIdleConns     int
+	dbMaxOpenConns     int
 	hostname           string
 	jsonSchemaFilePath string
 	logger             logger.CtxLogger
@@ -43,10 +44,7 @@ type baseAppContext struct {
 	metricsEnabled     bool
 	rollbarClient      rollbar.Client
 	rollbarEnabled     bool
-}
-
-func (self *baseAppContext) APIPort() int {
-	return self.apiPort
+	servicePort        int
 }
 
 func (self *baseAppContext) AppName() string {
@@ -63,6 +61,14 @@ func (self *baseAppContext) CodeVersion() string {
 
 func (self *baseAppContext) DB() *sql.DB {
 	return self.db
+}
+
+func (self *baseAppContext) DBMaxIdleConns() int {
+	return self.dbMaxIdleConns
+}
+
+func (self *baseAppContext) DBMaxOpenConns() int {
+	return self.dbMaxOpenConns
 }
 
 func (self *baseAppContext) Hostname() string {
@@ -91,6 +97,10 @@ func (self *baseAppContext) RollbarClient() rollbar.Client {
 
 func (self *baseAppContext) RollbarEnabled() bool {
 	return self.rollbarEnabled
+}
+
+func (self *baseAppContext) ServicePort() int {
+	return self.servicePort
 }
 
 func (self *baseAppContext) SetLogger(logger logger.CtxLogger) AppContext {
@@ -214,6 +224,32 @@ func (self *baseAppContext) setDBFromEnv() error {
 	return nil
 }
 
+func (self *baseAppContext) setDBMaxIdleConnsFromEnv() error {
+	if max_conns, found, err := getIntFromEnv("DB_MAX_IDLE_CONNS"); !found {
+		return nil
+	} else if err != nil {
+		return err
+	} else if max_conns < 1 {
+		return errors.New("DB_MAX_IDLE_CONNS must be > 0")
+	} else {
+		self.dbMaxIdleConns = max_conns
+		return nil
+	}
+}
+
+func (self *baseAppContext) setDBMaxOpenConnsFromEnv() error {
+	if max_conns, found, err := getIntFromEnv("DB_MAX_OPEN_CONNS"); !found {
+		return nil
+	} else if err != nil {
+		return err
+	} else if max_conns < 1 {
+		return errors.New("DB_MAX_OPEN_CONNS must be > 0")
+	} else {
+		self.dbMaxOpenConns = max_conns
+		return nil
+	}
+}
+
 func getIntFromEnv(name string) (int, bool, error) {
 	str, found := os.LookupEnv(name)
 	if !found || str == "" {
@@ -226,6 +262,17 @@ func getIntFromEnv(name string) (int, bool, error) {
 	}
 
 	return num, true, nil
+}
+
+func (self *baseAppContext) setServicePortFromEnv() error {
+	if port, _, err := getIntFromEnv("SERVICE_PORT"); err != nil {
+		return err
+	} else if port < 0 {
+		return errors.New("SERVICE_PORT must be >= 0")
+	} else {
+		self.servicePort = port
+		return nil
+	}
 }
 
 func NewAppContext(app_name string) (AppContext, error) {
@@ -247,16 +294,12 @@ func NewAppContext(app_name string) (AppContext, error) {
 	// Set this before we setup rollbarClient
 	appctx.codeVersion = os.Getenv("CODE_VERSION")
 
-	if port, _, err := getIntFromEnv("API_PORT"); err != nil {
-		return nil, err
-	} else if port < 0 {
-		return nil, errors.New("API_PORT can't be a negative number")
-	} else {
-		appctx.apiPort = port
-	}
-
 	appctx.jsonSchemaFilePath = os.Getenv("JSON_SCHEMA_FILEPATH")
 	appctx.baseExternalURL = os.Getenv("BASE_URL")
+
+	if err := appctx.setServicePortFromEnv(); err != nil {
+		return nil, fmt.Errorf("Error setting service port: %s", err)
+	}
 
 	if err := appctx.setMetricsClientFromEnv(); err != nil {
 		return nil, fmt.Errorf("Error setting metrics client: %s", err)
@@ -266,8 +309,25 @@ func NewAppContext(app_name string) (AppContext, error) {
 		return nil, fmt.Errorf("Error setting rollbar client: %s", err)
 	}
 
+	if err := appctx.setDBMaxIdleConnsFromEnv(); err != nil {
+		return nil, fmt.Errorf("Error setting DB max idle connections: %s", err)
+	}
+
+	if err := appctx.setDBMaxOpenConnsFromEnv(); err != nil {
+		return nil, fmt.Errorf("Error setting DB max open connections: %s", err)
+	}
+
 	if err := appctx.setDBFromEnv(); err != nil {
 		return nil, fmt.Errorf("Error setting DB object: %s", err)
+	}
+
+	if appctx.db != nil {
+		if appctx.dbMaxIdleConns > 0 {
+			appctx.db.SetMaxIdleConns(appctx.dbMaxIdleConns)
+		}
+		if appctx.dbMaxOpenConns > 0 {
+			appctx.db.SetMaxOpenConns(appctx.dbMaxOpenConns)
+		}
 	}
 
 	return appctx, nil

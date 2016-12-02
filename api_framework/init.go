@@ -3,6 +3,7 @@ package api_framework
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
 	"github.com/tilteng/go-api-panichandler/panichandler_mw"
@@ -113,6 +114,15 @@ func (self *Controller) wrapNewRoute(rt *api_router.Route, opts ...interface{}) 
 		rctx.SetResponseHeader("X-Trace-Id", rt.GetTraceID())
 		rctx.SetResponseHeader("X-Span-Id", rt.GetSpanID())
 		fn(self.requestTraceManager.ContextWithRequestTrace(ctx, rt))
+		// Normally we write this right before any data is written. But
+		// we should set it here also just in case we're returning an
+		// empty body
+		rctx.SetResponseHeader(
+			"X-Response-Time",
+			fmt.Sprintf("%f ms",
+				float64(rctx.TimeElapsed())/float64(time.Millisecond),
+			),
+		)
 	}
 
 	rt.SetRouteFn(top_fn)

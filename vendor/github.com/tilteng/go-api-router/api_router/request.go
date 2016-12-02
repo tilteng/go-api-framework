@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type contextKey struct {
@@ -26,6 +27,7 @@ type RequestContext struct {
 	currentRoute        *Route
 	routeVars           map[string]string
 	statusHeaderWritten bool
+	startTime           time.Time
 }
 
 func (self *RequestContext) Value(key interface{}) interface{} {
@@ -64,6 +66,14 @@ func (self *RequestContext) WithContext(ctx context.Context) *RequestContext {
 
 func (self *RequestContext) CurrentRoute() *Route {
 	return self.currentRoute
+}
+
+func (self *RequestContext) StartTime() time.Time {
+	return self.startTime
+}
+
+func (self *RequestContext) TimeElapsed() time.Duration {
+	return time.Since(self.startTime)
 }
 
 func (self *RequestContext) RouteVar(name string) (string, bool) {
@@ -112,6 +122,7 @@ func NewContextForRequest(w ResponseWriter, r *http.Request, cur_route *Route) *
 		writer:       w,
 		currentRoute: cur_route,
 		routeVars:    vars,
+		startTime:    time.Now(),
 	}
 
 	req_ctx.request = r.WithContext(req_ctx)

@@ -40,7 +40,7 @@ func (self *MetricsWrapper) formatValue(s string) string {
 	return string(bytes)
 }
 
-func (self *MetricsWrapper) sendMetrics(ctx context.Context, then, now time.Time) {
+func (self *MetricsWrapper) sendMetrics(ctx context.Context, duration time.Duration) {
 	// Catch and ignore any errors
 	defer func() {
 		recover()
@@ -53,7 +53,7 @@ func (self *MetricsWrapper) sendMetrics(ctx context.Context, then, now time.Time
 
 	self.client.Timing(
 		self.timingName,
-		now.Sub(then),
+		duration,
 		1,
 		map[string]string{
 			"route":  self.formatValue(cur_route.Path()),
@@ -71,10 +71,11 @@ func (self *MetricsWrapper) SetTimingName(name string) {
 
 func (self *MetricsWrapper) Wrap(next api_router.RouteFn) api_router.RouteFn {
 	return func(ctx context.Context) {
-		then := time.Now()
 		next(ctx)
-		now := time.Now()
-		go self.sendMetrics(ctx, then, now)
+		// Grab duration before the go routine
+		rctx := api_router.RequestContextFromContext(ctx)
+		duration := rctx.TimeElapsed()
+		go self.sendMetrics(ctx, duration)
 	}
 }
 

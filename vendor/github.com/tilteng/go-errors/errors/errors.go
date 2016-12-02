@@ -165,6 +165,7 @@ type ErrorType interface {
 	GetDetails() string
 	GetStatus() int
 	GetTitle() string
+	GetInternalError() string
 	AsJSON() (string, error)
 	AsJSONAPIResponse() *JSONAPIErrorResponse
 	GetStackTrace() StackTrace
@@ -270,6 +271,10 @@ func (self *Error) GetTitle() string {
 	return self.Title
 }
 
+func (self *Error) GetInternalError() string {
+	return self.InternalError
+}
+
 type Errors []*Error
 
 func (self *Errors) AddError(err *Error) {
@@ -308,6 +313,13 @@ func (self Errors) GetTitle() string {
 		return ""
 	}
 	return self[0].Title
+}
+
+func (self Errors) GetInternalError() string {
+	if len(self) == 0 {
+		return ""
+	}
+	return self[0].InternalError
 }
 
 func (self Errors) GetStackTrace() StackTrace {

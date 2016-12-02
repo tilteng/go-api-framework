@@ -126,11 +126,16 @@ func NewErrorHandler(ctx context.Context, err errors.ErrorType) {
 			"span_id":  rctx.GetSpanID(),
 		}
 
+		title := err.GetInternalError()
+		if len(title) == 0 {
+			title = err.GetTitle()
+		}
+
 		trace := err.GetStackTrace()
 		if len(trace) != 0 {
 			tnotif := rctx.RollbarClient().NewTraceNotification(
 				rollbar.LV_CRITICAL,
-				err.GetTitle(),
+				title,
 				custom_info,
 			)
 
@@ -154,7 +159,7 @@ func NewErrorHandler(ctx context.Context, err errors.ErrorType) {
 		} else {
 			notif = rctx.RollbarClient().NewMessageNotification(
 				rollbar.LV_ERROR,
-				err.GetTitle(),
+				title,
 				custom_info,
 			)
 		}

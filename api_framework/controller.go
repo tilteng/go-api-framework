@@ -2,7 +2,9 @@ package api_framework
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"time"
 
 	"github.com/tilteng/go-api-jsonschema/jsonschema_mw"
 	"github.com/tilteng/go-api-panichandler/panichandler_mw"
@@ -93,6 +95,13 @@ func (self *Controller) WriteResponse(ctx context.Context, v interface{}) error 
 		rctx.SetStatus(status)
 		v = self.errorFormatter.FormatErrors(ctx, tilterr)
 	}
+
+	rctx.SetResponseHeader(
+		"X-Response-Time",
+		fmt.Sprintf("%f ms",
+			float64(rctx.TimeElapsed())/float64(time.Millisecond),
+		),
+	)
 
 	return rctx.serializerRequestContext.WriteSerializedResponse(rctx, v)
 }

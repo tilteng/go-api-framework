@@ -41,15 +41,15 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-jsonschema/jsonschema_mw",
-			"Rev": "91648378c2cdf400e09afd7a867223bc0f9673d8"
+			"Rev": "36c84b69a1be6d49baaa0793c4b95cb543c40830"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-panichandler/panichandler_mw",
-			"Rev": "b7617d6195bdae3db5e95f0d4eb5e2f6e44ca5e9"
+			"Rev": "5638de3c1e712470d75680741f2fe58efedc6523"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-request-logger/request_logger_mw",
-			"Rev": "4877c8fda7da2b8bb24fdb5a3c49329a3f83b1ea"
+			"Rev": "9b5843b14db98726f13fbbb56225949578bbaeca"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-router/api_router",
@@ -57,11 +57,11 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-api-serializers/serializers_mw",
-			"Rev": "460b0cdf8d6d92bd814c2179666ed711da49f6a3"
+			"Rev": "c8df7cb567346a64627afb52a4bfa4e8cfcd0c1e"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-app-context/app_context",
-			"Rev": "4b273aaee0cbc38bf0afae3060c4055f66b746a9"
+			"Rev": "9c1707528b18f314f8a8bc31ef3ea8764e495c55"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-errors/errors",
@@ -77,15 +77,15 @@
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics",
-			"Rev": "dca45a2f57610c1c9585e1aac11764e243aaa9c8"
+			"Rev": "9d37d413d34b682a2d7a7f44446c67ab193008ef"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-metrics/metrics_mw",
-			"Rev": "dca45a2f57610c1c9585e1aac11764e243aaa9c8"
+			"Rev": "9d37d413d34b682a2d7a7f44446c67ab193008ef"
 		},
 		{
 			"ImportPath": "github.com/tilteng/go-request-tracing/request_tracing",
-			"Rev": "2cb7682785af035e703739435cb6400882127d38"
+			"Rev": "5961aa5ba78d3e313b0baaf72aea86b56bd35a61"
 		},
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonpointer",

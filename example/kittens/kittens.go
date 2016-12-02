@@ -144,7 +144,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	port := app_context.APIPort()
+	port := app_context.ServicePort()
 	if port == 0 {
 		port = 31337
 	}

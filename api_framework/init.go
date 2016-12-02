@@ -146,12 +146,14 @@ func (self *Controller) Init(ctx context.Context) error {
 
 	if self.MetricsEnabled() && self.MetricsMiddleware == nil {
 		self.MetricsMiddleware = metrics_mw.NewMiddleware(self.MetricsClient())
+		self.logger.LogDebug(ctx, "metrics middleware is enabled")
 	}
 
 	if self.PanicHandlerMiddleware == nil {
 		self.PanicHandlerMiddleware = panichandler_mw.NewMiddleware(
 			panichandler_mw.PanicHandlerFn(self.handlePanic),
 		)
+		self.logger.LogDebug(ctx, "panichandler middleware is enabled")
 	}
 
 	if self.JSONSchemaMiddleware == nil && self.options.JSONSchemaFilePath != "" {
@@ -171,6 +173,7 @@ func (self *Controller) Init(ctx context.Context) error {
 		}
 
 		self.JSONSchemaMiddleware = js_mw
+		self.logger.LogDebug(ctx, "jsonschema middleware is enabled")
 	}
 
 	if self.SerializerMiddleware == nil {
@@ -187,6 +190,7 @@ func (self *Controller) Init(ctx context.Context) error {
 				self.options.ApacheLogWriter,
 				self.options.ApacheLogCombined,
 			)
+			self.logger.LogDebug(ctx, "apache logger middleware is enabled")
 		}
 	}
 
@@ -201,6 +205,7 @@ func (self *Controller) Init(ctx context.Context) error {
 			self.options.RequestLoggerOpts.Logger = self.Logger()
 		}
 		self.RequestLoggerMiddleware = request_logger_mw.NewMiddleware(self.options.RequestLoggerOpts)
+		self.logger.LogDebug(ctx, "request logger middleware is enabled")
 	}
 
 	self.Router.Set404Handler(func(ctx context.Context) {

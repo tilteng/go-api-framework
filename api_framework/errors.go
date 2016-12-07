@@ -141,7 +141,7 @@ func NewErrorHandler(ctx context.Context, err errors.ErrorType) {
 
 			tnotif.Trace.Exception = &rollbar.NotifierException{
 				Class:       err.GetName(),
-				Message:     err.GetTitle(),
+				Message:     title,
 				Description: err.GetDetails(),
 			}
 
